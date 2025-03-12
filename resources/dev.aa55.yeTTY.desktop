@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=yeTTY
+Comment=Serial port software
+Exec=yeTTY
+Type=Application
+Terminal=false
+Icon=dev.aa55.yeTTY
