@@ -1,3 +1,7 @@
+#include <cstdio>
+#include <cstdlib>
+#include <exception>
+
 #include <QApplication>
 #include <QDateTime>
 #include <QMessageBox>
@@ -7,6 +11,7 @@
 
 static void printUsage()
 {
+    // NOLINTNEXTLINE(cert-err33-c)
     fputs("Usage: " PROJECT_NAME " PORTNAME BAUDRATE\n"
           "       " PROJECT_NAME " FILENAME",
         stderr);
@@ -16,22 +21,23 @@ int main(int argc, char* argv[])
 {
     if (argc > 3) {
         printUsage();
+        // NOLINTNEXTLINE(concurrency-mt-unsafe)
         exit(EXIT_FAILURE);
     }
 
-    QApplication a(argc, argv);
+    const QApplication a(argc, argv);
 
     QApplication::setOrganizationDomain("aa55.dev");
     QApplication::setApplicationName(PROJECT_NAME);
     // This sets the icon in wayland
     QApplication::setDesktopFileName(PROJECT_DOMAIN);
     // This is needed to show the icon in the "About" window
-    a.setWindowIcon(QIcon::fromTheme(PROJECT_DOMAIN));
+    QApplication::setWindowIcon(QIcon::fromTheme(PROJECT_DOMAIN));
 
     try {
         MainWindow w;
         w.show();
-        return a.exec();
+        return QApplication::exec();
     } catch (std::exception& e) {
         QMessageBox::critical(nullptr, "Error", e.what());
         return EXIT_FAILURE;
