@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 project(yeTTY VERSION 0.1 LANGUAGES CXX)
 set(PROJECT_DOMAIN "dev.aa55.yeTTY")
 
+option(ENABLE_CLANG_TIDY "Enable clang tidy" OFF)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -19,6 +21,58 @@ find_package(KF6TextEditor REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libzstd REQUIRED IMPORTED_TARGET libzstd)
+
+if (ENABLE_CLANG_TIDY)
+    message("Enabling clang tidy")
+    set(CMAKE_CXX_CLANG_TIDY
+        "clang-tidy;-checks=*,-llvmlibc-restrict-system-libc-headers,\
+        -llvmlibc-implementation-in-namespace,\
+        -llvmlibc-callee-namespace,\
+        -misc-use-anonymous-namespace,\
+        -modernize-use-trailing-return-type,\
+        -fuchsia-default-arguments-calls,\
+        -cppcoreguidelines-avoid-magic-numbers,\
+        -readability-magic-numbers,\
+        -readability-implicit-bool-conversion,\
+        -clang-diagnostic-unknown-warning-option,\
+        -readability-identifier-length,\
+        -llvm-header-guard,\
+        -readability-avoid-const-params-in-decls,\
+        -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.")
+endif()
+
+add_compile_options($<$<CONFIG:Release>:-Wunused>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-pedantic>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror=logical-not-parentheses>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wctor-dtor-privacy>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wsign-promo>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wcast-align>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wcast-qual>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wdisabled-optimization>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wformat=2>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wmissing-declarations>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wmissing-include-dirs>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wredundant-decls>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wshadow>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wsign-conversion>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wstrict-overflow=2>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wswitch-default>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wundef>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror=return-type>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror=uninitialized>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wstrict-aliasing=2>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-unknown-warning-option>)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wnoexcept>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wlogical-op>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wstrict-null-sentinel>)
+endif()
 
 
 set(PROJECT_SOURCES
