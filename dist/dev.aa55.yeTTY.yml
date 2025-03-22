@@ -1,0 +1,20 @@
+id: dev.aa55.yeTTY
+runtime: org.kde.Platform
+runtime-version: '6.7'
+sdk: org.kde.Sdk
+command: yeTTY
+finish-args:
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=all
+modules:
+  - name: yeTTY
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    sources:
+      - type: git
+        url: https://github.com/aa55-dev/yeTTY.git
+        commit: 601baf75e060b991b740fb8b24210a1a18e900e0
+
