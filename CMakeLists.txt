@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 project(yeTTY VERSION 0.1 LANGUAGES CXX)
 set(PROJECT_DOMAIN "dev.aa55.yeTTY")
 
+option(ENABLE_ASAN "Enable address sanitizer" OFF)
+option(ENABLE_MSAN "Enable memory sanitizer" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang tidy" OFF)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -19,6 +21,28 @@ find_package(KF6TextEditor REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libzstd REQUIRED IMPORTED_TARGET libzstd)
+
+if(ENABLE_ASAN AND ENABLE_MSAN)
+  message(FATAL_ERROR "Both sanitizers cannot be enabled at same time")
+endif()
+
+if(ENABLE_ASAN)
+  message("Building with ASAN")
+  add_compile_options(-fsanitize=address)
+  add_compile_options(-fsanitize=undefined)
+  add_compile_options(-fno-sanitize-recover=all)
+  add_compile_options(-fsanitize=float-divide-by-zero)
+  add_compile_options(-fsanitize=float-cast-overflow)
+  add_compile_options(-fno-sanitize=null)
+  add_compile_options(-fno-sanitize=alignment)
+  add_link_options(-fsanitize=address -fsanitize=undefined)
+endif()
+
+if(ENABLE_MSAN)
+  message("Building with MSAN")
+  add_compile_options(-fsanitize=memory -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=memory)
+endif()
 
 if (ENABLE_CLANG_TIDY)
     message("Enabling clang tidy")
