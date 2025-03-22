@@ -13,10 +13,10 @@ class PortSelectionDialog : public QDialog {
 
 public:
     explicit PortSelectionDialog(QWidget* parent = nullptr);
-    PortSelectionDialog(const PortSelectionDialog &) = delete;
-    PortSelectionDialog(PortSelectionDialog &&) = delete;
-    PortSelectionDialog &operator=(const PortSelectionDialog &) = delete;
-    PortSelectionDialog &operator=(PortSelectionDialog &&) = delete;
+    PortSelectionDialog(const PortSelectionDialog&) = delete;
+    PortSelectionDialog(PortSelectionDialog&&) = delete;
+    PortSelectionDialog& operator=(const PortSelectionDialog&) = delete;
+    PortSelectionDialog& operator=(PortSelectionDialog&&) = delete;
     ~PortSelectionDialog() override;
 
     [[nodiscard]] int getSelectedBaud() const;
@@ -27,8 +27,8 @@ public slots:
 
 private:
     Ui::PortSelectionDialog* ui {};
-    QString selectedPortLocation ;
-    QList<QSerialPortInfo> availablePorts ;
+    QString selectedPortLocation;
+    QList<QSerialPortInfo> availablePorts;
 };
 
 #endif // PORTSELECTIONDIALOG_H

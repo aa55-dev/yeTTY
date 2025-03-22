@@ -12,10 +12,10 @@ class TriggerSetupDialog : public QDialog {
 
 public:
     explicit TriggerSetupDialog(QWidget* parent = nullptr);
-    TriggerSetupDialog(const TriggerSetupDialog &) = delete;
-    TriggerSetupDialog(TriggerSetupDialog &&) = delete;
-    TriggerSetupDialog &operator=(const TriggerSetupDialog &) = delete;
-    TriggerSetupDialog &operator=(TriggerSetupDialog &&) = delete;
+    TriggerSetupDialog(const TriggerSetupDialog&) = delete;
+    TriggerSetupDialog(TriggerSetupDialog&&) = delete;
+    TriggerSetupDialog& operator=(const TriggerSetupDialog&) = delete;
+    TriggerSetupDialog& operator=(TriggerSetupDialog&&) = delete;
     ~TriggerSetupDialog() override;
 
     [[nodiscard]] QString getKeyword() const;
