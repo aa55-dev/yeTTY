@@ -14,10 +14,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6  REQUIRED COMPONENTS Widgets SerialPort Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Widgets SerialPort Multimedia)
 find_package(KF6TextEditor REQUIRED)
-
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libzstd REQUIRED IMPORTED_TARGET libzstd)
@@ -111,9 +109,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=logical-not-parentheses -pedanti
 -Wno-deprecated-register -Werror=return-type -Werror=uninitialized -Wstrict-aliasing=2")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::SerialPort
-    Qt${QT_VERSION_MAJOR}::Multimedia
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets
+    Qt6::SerialPort
+    Qt6::Multimedia
     KF6::TextEditor
     PkgConfig::libzstd)
 
