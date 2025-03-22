@@ -414,7 +414,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
-                tr("Failed to open file") + ": " + port + ' ' + getErrorStr().data());
+                tr("Failed to open file") + ": " + port + ' ' + QString::fromStdString(getErrorStr()));
         }
         doc->setText(file.readAll());
         ui->startStopButton->setEnabled(false);
@@ -431,7 +431,7 @@ void MainWindow::setInhibit(const bool enabled)
         }
 
         if (auto result = ::close(inhibitFd); !result) {
-            qWarning() << "failed to close systemd fd: " << getErrorStr().data();
+            qWarning() << "failed to close systemd fd: " << getErrorStr();
         };
 
         inhibitFd = 0;
@@ -481,13 +481,11 @@ void MainWindow::setInhibit(const bool enabled)
 
 #endif
 
-std::array<char, 128> MainWindow::getErrorStr()
+std::string MainWindow::getErrorStr()
 {
-
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     std::array<char, 128> buffer;
-    strerror_r(errno, buffer.data(), buffer.size());
-    return buffer;
+    return strerror_r(errno, buffer.data(), buffer.size());
 }
 
 void MainWindow::writeCompressedFile(const QByteArray& contents, const int counter)
