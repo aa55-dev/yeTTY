@@ -9,22 +9,37 @@
 #include <KTextEditor/Editor>
 #include <KTextEditor/Message>
 #include <KTextEditor/View>
-#include <kstandardshortcut.h>
 
 #include <zstd.h>
 
+#include <array>
+#include <cerrno>
+#include <cstring>
 #include <malloc.h>
+#include <stdexcept>
+#include <tuple>
 #include <unistd.h>
+#include <utility>
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QDateTime>
+#include <QDebug>
+#include <QEvent>
 #include <QFile>
+#include <QIODevice>
 #include <QKeyEvent>
+#include <QMainWindow>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QSerialPortInfo>
 #include <QSoundEffect>
+#include <QString>
 #include <QTimer>
+#include <QUrl>
 #include <QVBoxLayout>
+#include <QWidget>
+#include <Qt>
 
 #ifdef SYSTEMD_AVAILABLE
 #include <systemd/sd-bus.h>
@@ -150,7 +165,7 @@ void MainWindow::setProgramState(const ProgramState newState)
     currentProgramState = newState;
 }
 
-std::pair<QString, int> MainWindow::getPortFromUser() const
+std::pair<QString, int> MainWindow::getPortFromUser()
 {
     PortSelectionDialog dlg;
     if (!dlg.exec()) {
@@ -218,7 +233,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     qCritical() << "Serial port error: " << error;
     ui->statusbar->showMessage(errMsg);
     if (!serialErrorMsg) {
-        serialErrorMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error);
+        serialErrorMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
     }
 
     if (errMsg != serialErrorMsg->text()) {
@@ -243,8 +258,10 @@ void MainWindow::handleClearAction()
     doc->setReadWrite(true);
     doc->setModified(false);
     doc->closeUrl();
-    doc->setHighlightingMode(HIGHLIGHT_MODE);
-    malloc_trim(0);
+    if (!doc->setHighlightingMode(HIGHLIGHT_MODE)) {
+        qWarning() << "Failed to set highlighting";
+    }
+    void(malloc_trim(0));
     doc->setReadWrite(false);
 }
 
@@ -257,7 +274,7 @@ void MainWindow::handleQuitAction()
 void MainWindow::handleScrollToEnd()
 {
     view->setFocus();
-    QCoreApplication::postEvent(view, new QKeyEvent(QEvent::KeyPress, Qt::Key_End, Qt::ControlModifier));
+    QCoreApplication::postEvent(view, new QKeyEvent(QEvent::KeyPress, Qt::Key_End, Qt::ControlModifier)); // NOLINT(cppcoreguidelines-owning-memory)
 }
 
 void MainWindow::handleAboutAction()
@@ -276,8 +293,8 @@ void MainWindow::handleConnectAction()
 void MainWindow::handleTriggerSetupAction()
 {
     if (!triggerSetupDialog) {
-        triggerSetupDialog = new TriggerSetupDialog(this);
-        connect(triggerSetupDialog, &QDialog::finished, this, &MainWindow::handleTriggerSetupDialogDone);
+        triggerSetupDialog = std::make_unique<TriggerSetupDialog>(this);
+        connect(triggerSetupDialog.get(), &QDialog::finished, this, &MainWindow::handleTriggerSetupDialogDone);
     }
     triggerSetupDialog->open();
 }
@@ -345,7 +362,7 @@ void MainWindow::handleLongTermRunModeTimer()
 
     const auto timeSinceLastSave = elapsedTimer.elapsed() - longTermRunModeStartTime;
     bool shouldSave {};
-    if (timeSinceLastSave > (longTermRunModeMaxTime * 60 * 1000)) {
+    if (timeSinceLastSave > (static_cast<qint64>(longTermRunModeMaxTime) * 60 * 1000)) {
         shouldSave = true;
         qInfo() << "Time since last save: " << timeSinceLastSave;
     }
@@ -370,8 +387,8 @@ void MainWindow::handleLongTermRunModeTimer()
 void MainWindow::handleLongTermRunModeAction()
 {
     if (!longTermRunModeDialog) {
-        longTermRunModeDialog = new LongTermRunModeDialog(this);
-        connect(longTermRunModeDialog, &QDialog::finished, this, &MainWindow::handleLongTermRunModeDialogDone);
+        longTermRunModeDialog = std::make_unique<LongTermRunModeDialog>(this);
+        connect(longTermRunModeDialog.get(), &QDialog::finished, this, &MainWindow::handleLongTermRunModeDialogDone);
     }
     longTermRunModeDialog->open();
 }
@@ -397,7 +414,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
-                tr("Failed to open file") + ": " + port + ' ' + strerror(errno));
+                tr("Failed to open file") + ": " + port + ' ' + getErrorStr().data());
         }
         doc->setText(file.readAll());
         ui->startStopButton->setEnabled(false);
@@ -414,7 +431,7 @@ void MainWindow::setInhibit(const bool enabled)
         }
 
         if (auto result = ::close(inhibitFd); !result) {
-            qWarning() << "failed to close systemd fd" << strerror(errno);
+            qWarning() << "failed to close systemd fd: " << getErrorStr().data();
         };
 
         inhibitFd = 0;
@@ -461,7 +478,17 @@ void MainWindow::setInhibit(const bool enabled)
     qInfo() << "Inhibted";
     inhibitFd = newFd;
 }
+
 #endif
+
+std::array<char, 128> MainWindow::getErrorStr()
+{
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    std::array<char, 128> buffer;
+    strerror_r(errno, buffer.data(), buffer.size());
+    return buffer;
+}
 
 void MainWindow::writeCompressedFile(const QByteArray& contents, const int counter)
 {
@@ -505,7 +532,9 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     ZSTD_inBuffer input = { contents.data(), static_cast<size_t>(contentsLen), 0 };
 
     bool finished {};
-    do {
+
+    // NOLINTNEXTLINE(altera-id-dependent-backward-branch)
+    while (!finished) {
         ZSTD_outBuffer out = { zstdOutBuffer.data(), zstdOutBuffer.size(), 0 };
         const auto remaining = ZSTD_compressStream2(zstdCtx, &out, &input, ZSTD_e_end);
         validateZstdResult(remaining);
@@ -513,8 +542,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
         file.write(zstdOutBuffer.data(), static_cast<qint64>(out.pos));
 
         finished = (remaining == 0);
-
-    } while (!finished);
+    }
 
     file.flush();
     fsync(file.handle());

@@ -3,10 +3,16 @@
 #include "ui_longtermrunmodedialog.h"
 
 #include <QDebug>
+#include <QDialog>
 #include <QFileDialog>
+#include <QFontMetrics>
 #include <QIntValidator>
 #include <QPushButton>
 #include <QStandardPaths>
+#include <QStringLiteral>
+#include <QToolButton>
+#include <QWidget>
+#include <QtLogging>
 
 LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     : QDialog(parent)
@@ -27,15 +33,15 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     ui->directoryLineEdit->setText(directoryStr);
 
     // resize the lineedit so that the default path can fit in comfortably.
-    QFontMetrics fontMetrics(ui->directoryLineEdit->font());
+    const QFontMetrics fontMetrics(ui->directoryLineEdit->font());
     ui->directoryLineEdit->setMinimumWidth(fontMetrics.boundingRect(directoryStr + "     ").width());
 
     connect(ui->timeLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
     connect(ui->memoryLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
     connect(ui->toolButton, &QToolButton::pressed, this, &LongTermRunModeDialog::onToolButton);
 
-    ui->memoryLineEdit->setValidator(new QIntValidator(1, 512, this));
-    ui->timeLineEdit->setValidator(new QIntValidator(1, 60, this));
+    ui->memoryLineEdit->setValidator(new QIntValidator(1, 512, this)); // NOLINT(cppcoreguidelines-owning-memory)
+    ui->timeLineEdit->setValidator(new QIntValidator(1, 60, this)); // NOLINT(cppcoreguidelines-owning-memory)
 
     onInputChanged();
 }
@@ -62,8 +68,8 @@ bool LongTermRunModeDialog::isEnabled() const
 
 void LongTermRunModeDialog::onInputChanged()
 {
-
-    bool timeOk {}, memoryOk {};
+    bool timeOk {};
+    bool memoryOk {};
 
     timeInMinutes = ui->timeLineEdit->text().toInt(&timeOk);
     memoryInMiB = ui->memoryLineEdit->text().toInt(&memoryOk);
@@ -76,7 +82,7 @@ void LongTermRunModeDialog::onInputChanged()
 
     ui->msgLabel->setText(QStringLiteral("yeTTY will save the serial data every %1 minutes or %2 MiB"
                                          " (whichever is earlier) and clear the contents from memory(and view)")
-                              .arg(QString::number(timeInMinutes), QString::number(memoryInMiB)));
+            .arg(QString::number(timeInMinutes), QString::number(memoryInMiB)));
 }
 
 void LongTermRunModeDialog::onToolButton()

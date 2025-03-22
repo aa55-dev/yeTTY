@@ -13,7 +13,7 @@ TriggerSetupDialog::~TriggerSetupDialog()
     delete ui;
 }
 
-const QString TriggerSetupDialog::getKeyword() const
+QString TriggerSetupDialog::getKeyword() const
 {
     return ui->lineEdit->text();
 }

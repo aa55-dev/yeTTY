@@ -3,22 +3,28 @@
 
 #include <QDialog>
 #include <QUrl>
+#include <QWidget>
+#include <qtmetamacros.h>
 
 namespace Ui {
 class LongTermRunModeDialog;
-}
+} // namespace Ui
 
 class LongTermRunModeDialog : public QDialog {
     Q_OBJECT
 
 public:
     explicit LongTermRunModeDialog(QWidget* parent = nullptr);
-    ~LongTermRunModeDialog();
+    LongTermRunModeDialog(const LongTermRunModeDialog&) = delete;
+    LongTermRunModeDialog(LongTermRunModeDialog&&) = delete;
+    LongTermRunModeDialog& operator=(const LongTermRunModeDialog&) = delete;
+    LongTermRunModeDialog& operator=(LongTermRunModeDialog&&) = delete;
+    ~LongTermRunModeDialog() override;
 
-    int getMinutes() const;
-    int getMemory() const;
-    bool isEnabled() const;
-    QUrl getDirectory() const;
+    [[nodiscard]] int getMinutes() const;
+    [[nodiscard]] int getMemory() const;
+    [[nodiscard]] bool isEnabled() const;
+    [[nodiscard]] QUrl getDirectory() const;
 
 private slots:
     void onInputChanged();

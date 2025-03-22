@@ -31,6 +31,7 @@ if (ENABLE_CLANG_TIDY)
         -misc-use-anonymous-namespace,\
         -modernize-use-trailing-return-type,\
         -fuchsia-default-arguments-calls,\
+        -fuchsia-default-arguments-declarations,\
         -cppcoreguidelines-avoid-magic-numbers,\
         -readability-magic-numbers,\
         -readability-implicit-bool-conversion,\
@@ -38,7 +39,12 @@ if (ENABLE_CLANG_TIDY)
         -readability-identifier-length,\
         -llvm-header-guard,\
         -readability-avoid-const-params-in-decls,\
-        -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.")
+        -readability-redundant-access-specifiers,\
+        -google-readability-todo,\
+        -misc-include-cleaner,\
+        -cppcoreguidelines-pro-type-vararg,\
+        -hicpp-vararg,\
+        -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.;--exclude-header-filter=ui_\*")
 endif()
 
 add_compile_options($<$<CONFIG:Release>:-Wunused>)

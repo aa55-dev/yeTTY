@@ -1,31 +1,37 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <zstd.h>
-
+#include <cstdint>
+#include <qtypes.h>
+#include <utility>
+#include <vector>
+// #include <source_location>
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
+#include <QString>
+#include <QWidget>
 #include <QtSerialPort/QSerialPort>
-
-#include <vector>
-// #include <source_location>
+#include <cstdlib>
 #include <experimental/source_location>
+#include <qtconfigmacros.h>
+#include <qtmetamacros.h>
+#include <zstd.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
-}
+} // namespace Ui
 QT_END_NAMESPACE
 
 namespace KTextEditor {
-class Editor;
+class Editor; // NOLINT(cppcoreguidelines-virtual-class-destructor)
 class Document;
 class View;
 class Message;
-}
+} // namespace KTextEditor
 
-enum class ProgramState {
+enum class ProgramState : std::uint8_t {
     Unknown,
     Started,
     Stopped
@@ -37,12 +43,16 @@ class TriggerSetupDialog;
 class LongTermRunModeDialog;
 class QElapsedTimer;
 
-class MainWindow : public QMainWindow {
+class MainWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget* parent = nullptr);
+    MainWindow(const MainWindow&) = delete;
+    MainWindow(MainWindow&&) = delete;
+    MainWindow& operator=(const MainWindow&) = delete;
+    MainWindow& operator=(MainWindow&&) = delete;
+    ~MainWindow() override;
 
 private slots:
     void handleReadyRead();
@@ -50,7 +60,7 @@ private slots:
 
     void handleSaveAction();
     void handleClearAction();
-    void handleQuitAction();
+    static void handleQuitAction();
     void handleScrollToEnd();
     void handleAboutAction();
     void handleConnectAction();
@@ -68,49 +78,48 @@ private:
     KTextEditor::Editor* editor {};
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
-    QPointer<KTextEditor::Message> serialErrorMsg {};
+    QPointer<KTextEditor::Message> serialErrorMsg;
 
     void setProgramState(const ProgramState newState);
-    [[nodiscard]] std::pair<QString, int> getPortFromUser() const;
+    [[nodiscard]] static std::pair<QString, int> getPortFromUser();
 
     void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
     QSerialPort* serialPort {};
     QSoundEffect* sound {};
-    TriggerSetupDialog* triggerSetupDialog {};
+    std::unique_ptr<TriggerSetupDialog> triggerSetupDialog;
 
     QElapsedTimer elapsedTimer;
 
-    QByteArray triggerKeyword {};
+    QByteArray triggerKeyword;
     bool triggerActive {};
     int triggerMatchCount {};
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* timer {};
 
-    QByteArray triggerSearchLine {};
+    QByteArray triggerSearchLine;
 
     // Long term run mode
-    LongTermRunModeDialog* longTermRunModeDialog {};
+    std::unique_ptr<LongTermRunModeDialog> longTermRunModeDialog;
     bool longTermRunModeEnabled {};
-    int longTermRunModeMaxMemory {};
+    qsizetype longTermRunModeMaxMemory {};
     int longTermRunModeMaxTime {};
-    QString longTermRunModePath {};
+    QString longTermRunModePath;
     qint64 longTermRunModeStartTime {};
     QTimer* longTermRunModeTimer {};
     ZSTD_CCtx* zstdCtx {};
-    std::vector<char> zstdOutBuffer {};
+    std::vector<char> zstdOutBuffer;
     int fileCounter {};
 
-    static inline constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
+    static constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
 
 #ifdef SYSTEMD_AVAILABLE
     int inhibitFd {};
-
     void setInhibit(const bool enabled);
-
 #endif
 
+    [[nodiscard]] static std::array<char, 128> getErrorStr();
     void writeCompressedFile(const QByteArray& contents, const int counter);
-    static void validateZstdResult(const size_t result, const std::experimental::source_location = std::experimental::source_location::current());
+    static void validateZstdResult(const size_t result, const std::experimental::source_location srcLoc = std::experimental::source_location::current());
 };
 #endif // MAINWINDOW_H

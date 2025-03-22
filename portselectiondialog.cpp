@@ -16,7 +16,7 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     ui->baudRateLineEdit->setText("115200");
     availablePorts = QSerialPortInfo::availablePorts();
 
-    for (auto i : availablePorts) {
+    for (const auto &i : availablePorts) {
         if (i.systemLocation() == "/dev/ttyS0") {
             continue;
         }
@@ -26,7 +26,7 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     // set focus so that enter works
     ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setFocus();
 
-    ui->baudRateLineEdit->setValidator(new QIntValidator(1, 100 * 1000 * 1000, this));
+    ui->baudRateLineEdit->setValidator(new QIntValidator(1, 100 * 1000 * 1000, this)); // NOLINT(cppcoreguidelines-owning-memory)
 }
 
 PortSelectionDialog::~PortSelectionDialog()
