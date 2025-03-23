@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QEvent>
 #include <QFile>
+#include <QFileSystemWatcher>
 #include <QIODevice>
 #include <QKeyEvent>
 #include <QMainWindow>
@@ -49,6 +50,7 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , fsWatcher(new QFileSystemWatcher(this))
     , serialPort(new QSerialPort(this))
     , sound(new QSoundEffect(this))
     , timer(new QTimer(this))
@@ -75,9 +77,9 @@ MainWindow::MainWindow(QWidget* parent)
     case 2: // Filename in cmdline arg
         portLocation = args[1];
         {
-            constexpr std::string_view PREFIX = "/dev/";
-            if (portLocation.startsWith(PREFIX.data())) {
-                const auto portName = portLocation.remove(0, PREFIX.size());
+
+            if (portLocation.startsWith(DEV_PREFIX.data())) {
+                const auto portName = portLocation.remove(0, DEV_PREFIX.size());
                 QSerialPortInfo portInfo(portLocation);
                 manufacturer = portInfo.manufacturer();
                 description = portInfo.description();
@@ -143,6 +145,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(timer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
     connect(longTermRunModeTimer, &QTimer::timeout, this, &MainWindow::handleLongTermRunModeTimer);
 
+    connect(fsWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::handleFileWatchEvent);
+
     sound->setSource(QUrl::fromLocalFile(":/notify.wav"));
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
@@ -171,10 +175,16 @@ void MainWindow::setProgramState(const ProgramState newState)
         }
         ui->startStopButton->setText("Stop");
         ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-stop"));
+
+        Q_ASSERT(fsWatcher->files().isEmpty());
+        fsWatcher->addPath(getSerialPortPath());
+
     } else if (newState == ProgramState::Stopped) {
         qInfo() << "Program stopped";
         ui->startStopButton->setText("Start");
         ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-start"));
+
+        fsWatcher->removePaths(fsWatcher->files());
     } else {
         throw std::runtime_error("Unknown state");
     }
@@ -231,7 +241,6 @@ void MainWindow::handleReadyRead()
 
 void MainWindow::handleError(const QSerialPort::SerialPortError error)
 {
-
     if (error == QSerialPort::SerialPortError::NoError) {
         return;
     }
@@ -242,7 +251,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
 
     auto errMsg = "Error: " + QVariant::fromValue(error).toString();
 
-    const auto& portName = "/dev/" + serialPort->portName();
+    const auto portName = getSerialPortPath();
 
     if (!QFile::exists(portName)) {
         errMsg += QString(": %1 detached").arg(portName);
@@ -347,9 +356,12 @@ void MainWindow::handleRetryConnection()
 {
     // This can end up opening the wrong port if the user is plugging in multiple serial devices
     // and a new device enumerates to the same name as the old one.
-    if (serialPort->error() != QSerialPort::NoError) {
+    if (!serialPort->isOpen()) {
         qInfo() << "Retrying connection";
         connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
+    } else {
+        qWarning() << "Serial port is open, stopping retry timer";
+        timer->stop();
     }
 }
 
@@ -399,6 +411,14 @@ void MainWindow::handleLongTermRunModeTimer()
         writeCompressedFile(utfTxt, fileCounter++);
 
         handleClearAction();
+    }
+}
+
+void MainWindow::handleFileWatchEvent(const QString& path)
+{
+    if (!QFile::exists(path) && serialPort->isOpen()) {
+        Q_ASSERT(path == getSerialPortPath());
+        handleError(QSerialPort::SerialPortError::ResourceError);
     }
 }
 
@@ -576,4 +596,9 @@ void MainWindow::validateZstdResult(const size_t result, const std::experimental
     if (ZSTD_isError(result)) {
         throw std::runtime_error(std::string("ZSTD error: ") + ZSTD_getErrorName(result) + " " + std::to_string(srcLoc.line()));
     }
+}
+
+QString MainWindow::getSerialPortPath() const
+{
+    return DEV_PREFIX.data() + serialPort->portName();
 }

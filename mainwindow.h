@@ -43,6 +43,7 @@ class QTimer;
 class TriggerSetupDialog;
 class LongTermRunModeDialog;
 class QElapsedTimer;
+class QFileSystemWatcher;
 
 class MainWindow final : public QMainWindow {
     Q_OBJECT
@@ -72,8 +73,11 @@ private slots:
     void handleLongTermRunModeAction();
     void handleLongTermRunModeDialogDone(int result);
     void handleLongTermRunModeTimer();
+    void handleFileWatchEvent(const QString &path);
+
 
 private:
+    static constexpr std::string_view DEV_PREFIX = "/dev/";
     Ui::MainWindow* ui {};
 
     KTextEditor::Editor* editor {};
@@ -85,6 +89,9 @@ private:
     [[nodiscard]] PortSelectionDialog::PortInfo getPortFromUser();
 
     void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true, const QString& description = "", const QString& manufacturer = "");
+
+    // Qt is unable to detect disconnection, we need to use inotify to monitor the serial port file path.
+    QFileSystemWatcher* fsWatcher;
 
     QSerialPort* serialPort {};
     PortSelectionDialog::PortInfo selectedPortInfo {};
@@ -124,5 +131,6 @@ private:
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents, const int counter);
     static void validateZstdResult(const size_t result, const std::experimental::source_location srcLoc = std::experimental::source_location::current());
+    [[nodiscard]] QString getSerialPortPath() const ;
 };
 #endif // MAINWINDOW_H
