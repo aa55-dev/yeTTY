@@ -302,6 +302,7 @@ void MainWindow::handleAboutAction()
 void MainWindow::handleConnectAction()
 {
     serialPort->close();
+    timer->stop();
     const auto [location, manufacturer, description, baud] = getPortFromUser();
     handleClearAction();
     connectToDevice(location, baud, true, manufacturer, description);
