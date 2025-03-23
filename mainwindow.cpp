@@ -102,6 +102,7 @@ MainWindow::MainWindow(QWidget* parent)
     doc->setHighlightingMode(HIGHLIGHT_MODE);
 
     view = doc->createView(this);
+    view->setStatusBarEnabled(false);
 
     ui->verticalLayout->insertWidget(0, view);
 
