@@ -108,36 +108,36 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->verticalLayout->insertWidget(0, view);
 
-    setWindowTitle(PROJECT_NAME);
+    setWindowTitle(QStringLiteral(PROJECT_NAME));
 
     connectToDevice(portLocation, baud, true, manufacturer, description);
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
-    ui->actionConnectToDevice->setIcon(QIcon::fromTheme("document-open"));
+    ui->actionConnectToDevice->setIcon(QIcon::fromTheme(QStringLiteral("document-open")));
 
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::handleSaveAction);
     ui->actionSave->setShortcut(QKeySequence::Save);
-    ui->actionSave->setIcon(QIcon::fromTheme("document-save"));
+    ui->actionSave->setIcon(QIcon::fromTheme(QStringLiteral("document-save")));
 
     connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::handleQuitAction);
     ui->actionQuit->setShortcut(QKeySequence::Quit);
-    ui->actionQuit->setIcon(QIcon::fromTheme("application-exit"));
+    ui->actionQuit->setIcon(QIcon::fromTheme(QStringLiteral("application-exit")));
 
     connect(ui->actionClear, &QAction::triggered, this, &MainWindow::handleClearAction);
     ui->actionClear->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
-    ui->actionClear->setIcon(QIcon::fromTheme("edit-clear-all"));
+    ui->actionClear->setIcon(QIcon::fromTheme(QStringLiteral("edit-clear-all")));
 
     connect(ui->scrollToEndButton, &QPushButton::pressed, this, &MainWindow::handleScrollToEnd);
-    ui->scrollToEndButton->setIcon(QIcon::fromTheme("go-bottom"));
+    ui->scrollToEndButton->setIcon(QIcon::fromTheme(QStringLiteral("go-bottom")));
 
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::handleAboutAction);
-    ui->actionAbout->setIcon(QIcon::fromTheme("help-about"));
+    ui->actionAbout->setIcon(QIcon::fromTheme(QStringLiteral("help-about")));
 
     connect(ui->actionTrigger, &QAction::triggered, this, &MainWindow::handleTriggerSetupAction);
-    ui->actionTrigger->setIcon(QIcon::fromTheme("mail-thread-watch"));
+    ui->actionTrigger->setIcon(QIcon::fromTheme(QStringLiteral("mail-thread-watch")));
 
-    ui->actionLongTermRunMode->setIcon(QIcon::fromTheme("media-record"));
+    ui->actionLongTermRunMode->setIcon(QIcon::fromTheme(QStringLiteral("media-record")));
     connect(ui->actionLongTermRunMode, &QAction::triggered, this, &MainWindow::handleLongTermRunModeAction);
 
     connect(ui->startStopButton, &QPushButton::pressed, this, &MainWindow::handleStartStopButton);
@@ -150,7 +150,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(fsWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::handleFileWatchEvent);
 
-    sound->setSource(QUrl::fromLocalFile(":/notify.wav"));
+    sound->setSource(QUrl::fromLocalFile(QStringLiteral(":/notify.wav")));
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
@@ -176,16 +176,16 @@ void MainWindow::setProgramState(const ProgramState newState)
         if (serialErrorMsg) {
             serialErrorMsg->deleteLater();
         }
-        ui->startStopButton->setText("&Stop");
-        ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-stop"));
+        ui->startStopButton->setText(QStringLiteral("&Stop"));
+        ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-stop")));
 
         Q_ASSERT(fsWatcher->files().isEmpty());
         fsWatcher->addPath(getSerialPortPath());
 
     } else if (newState == ProgramState::Stopped) {
         qInfo() << "Program stopped";
-        ui->startStopButton->setText("&Start");
-        ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-start"));
+        ui->startStopButton->setText(QStringLiteral("&Start"));
+        ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-start")));
 
         fsWatcher->removePaths(fsWatcher->files());
     } else {
@@ -223,7 +223,7 @@ void MainWindow::handleReadyRead()
             if (i == '\n') {
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;
-                    ui->statusbar->showMessage(QString("%1 matches").arg(triggerMatchCount), 3000);
+                    ui->statusbar->showMessage(QStringLiteral("%1 matches").arg(triggerMatchCount), 3000);
 
                     // TODO: This is broken. Qt plays the sound for a few times and then stops working.
                     sound->play();
@@ -252,12 +252,12 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
         serialPort->close();
     }
 
-    auto errMsg = "Error: " + QVariant::fromValue(error).toString();
+    auto errMsg = QStringLiteral("Error: ") + QVariant::fromValue(error).toString();
 
     const auto portName = getSerialPortPath();
 
     if (!QFile::exists(portName)) {
-        errMsg += QString(": %1 detached").arg(portName);
+        errMsg += QStringLiteral(": %1 detached").arg(portName);
     }
     qCritical() << "Serial port error: " << error;
     ui->statusbar->showMessage(errMsg);
@@ -308,7 +308,7 @@ void MainWindow::handleScrollToEnd()
 
 void MainWindow::handleAboutAction()
 {
-    QMessageBox::about(this, "About", QString("%1\t\t\n%2\t").arg(PROJECT_NAME, PROJECT_VERSION));
+    QMessageBox::about(this, QStringLiteral("About"), QStringLiteral("%1\t\t\n%2\t").arg(PROJECT_NAME, PROJECT_VERSION));
 }
 
 void MainWindow::handleConnectAction()
@@ -443,9 +443,9 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
 
     const QString portInfoText = port
         % " "
-        % (!baud ? QString() : "| " + QString::number(baud))
-        % (manufacturer.isEmpty() ? QString() : "| " + manufacturer)
-        % (description.isEmpty() ? QString() : "| " + description);
+        % (!baud ? QString() : QStringLiteral("| ") + QString::number(baud))
+        % (manufacturer.isEmpty() ? QString() : QStringLiteral("| ") + manufacturer)
+        % (description.isEmpty() ? QString() : QStringLiteral("| ") + description);
 
     ui->portInfoLabel->setText(portInfoText);
 
@@ -453,7 +453,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
     serialPort->clearError();
     if (serialPort->open(QIODevice::ReadOnly)) {
         ui->startStopButton->setEnabled(true);
-        ui->statusbar->showMessage("Running...");
+        ui->statusbar->showMessage(QStringLiteral("Running..."));
         setProgramState(ProgramState::Started);
     } else {
         // We allow the user to open non-serial, static plain text files.
@@ -462,7 +462,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
-                tr("Failed to open file") + ": " + port + ' ' + QString::fromStdString(getErrorStr()));
+                tr("Failed to open file") % QStringLiteral(": ") % port % ' ' % QString::fromStdString(getErrorStr()));
         }
         doc->setText(file.readAll());
         ui->startStopButton->setEnabled(false);
@@ -547,7 +547,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     // In case this function gets called multiple times rapidly, the `currentDateTime()` function
     // will return the same value and therefore we will attempt to use the same filename more than
     // once. In order to prevent this we prepend the filename with an incrementing counter.
-    const auto filename = QString("%1/%2_%3.txt.zst")
+    const auto filename = QString(QStringLiteral("%1/%2_%3.txt.zst"))
                               .arg(longTermRunModePath,
                                   QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate),
                                   (QStringLiteral("%1").arg(counter, 8, 10, QLatin1Char('0'))));
@@ -556,7 +556,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
 
     QFile file(filename);
     if (const auto result = file.open(QIODevice::WriteOnly | QIODevice::NewOnly); !result) {
-        const auto msg = QString("Failed to open: %1 %2 %3").arg(filename).arg(static_cast<int>(result)).arg(errno);
+        const auto msg = QString(QStringLiteral("Failed to open: %1 %2 %3")).arg(filename).arg(static_cast<int>(result)).arg(errno);
         qCritical() << msg;
         throw std::runtime_error(msg.toStdString());
     }
@@ -594,7 +594,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     file.close();
 }
 
-void MainWindow::validateZstdResult(const size_t result, const std::experimental::source_location srcLoc)
+void MainWindow::validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc)
 {
     if (ZSTD_isError(result)) {
         throw std::runtime_error(std::string("ZSTD error: ") + ZSTD_getErrorName(result) + " " + std::to_string(srcLoc.line()));

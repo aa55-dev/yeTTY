@@ -13,7 +13,7 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     ui->setupUi(this);
     connect(ui->portsComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PortSelectionDialog::onCurrentIdxChanged);
 
-    ui->baudRateLineEdit->setText("115200");
+    ui->baudRateLineEdit->setText(QStringLiteral("115200"));
     availablePorts = QSerialPortInfo::availablePorts();
 
     for (const auto& i : std::as_const(availablePorts)) {

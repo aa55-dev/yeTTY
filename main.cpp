@@ -27,19 +27,19 @@ int main(int argc, char* argv[])
 
     const QApplication a(argc, argv);
 
-    QApplication::setOrganizationDomain("aa55.dev");
-    QApplication::setApplicationName(PROJECT_NAME);
+    QApplication::setOrganizationDomain(QStringLiteral("yeTTY.aa55.dev"));
+    QApplication::setApplicationName(QStringLiteral(PROJECT_NAME));
     // This sets the icon in wayland
-    QApplication::setDesktopFileName(PROJECT_DOMAIN);
+    QApplication::setDesktopFileName(QStringLiteral(PROJECT_DOMAIN));
     // This is needed to show the icon in the "About" window
-    QApplication::setWindowIcon(QIcon::fromTheme(PROJECT_DOMAIN));
+    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(PROJECT_DOMAIN)));
 
     try {
         MainWindow w;
         w.show();
         return QApplication::exec();
     } catch (std::exception& e) {
-        QMessageBox::critical(nullptr, "Error", e.what());
+        QMessageBox::critical(nullptr, QStringLiteral("Error"), e.what());
         return EXIT_FAILURE;
     }
 }

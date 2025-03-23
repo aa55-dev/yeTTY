@@ -34,7 +34,7 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
 
     // resize the lineedit so that the default path can fit in comfortably.
     const QFontMetrics fontMetrics(ui->directoryLineEdit->font());
-    ui->directoryLineEdit->setMinimumWidth(fontMetrics.boundingRect(directoryStr + "     ").width());
+    ui->directoryLineEdit->setMinimumWidth(fontMetrics.boundingRect(directoryStr + QStringLiteral("     ")).width());
 
     connect(ui->timeLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
     connect(ui->memoryLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);

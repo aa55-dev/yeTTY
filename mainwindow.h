@@ -87,7 +87,9 @@ private:
     void setProgramState(const ProgramState newState);
     [[nodiscard]] PortSelectionDialog::PortInfo getPortFromUser();
 
-    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true, const QString& manufacturer = "", const QString& description = "");
+    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true,
+        const QString& manufacturer = QLatin1StringView(""),
+        const QString& description = QLatin1StringView(""));
 
     // Qt is unable to detect disconnection, we need to use inotify to monitor the serial port file path.
     QFileSystemWatcher* fsWatcher;
@@ -129,7 +131,7 @@ private:
 
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents, const int counter);
-    static void validateZstdResult(const size_t result, const std::experimental::source_location srcLoc = std::experimental::source_location::current());
+    static void validateZstdResult(const size_t result, const std::experimental::source_location &srcLoc = std::experimental::source_location::current());
     [[nodiscard]] QString getSerialPortPath() const;
 };
 #endif // MAINWINDOW_H
