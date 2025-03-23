@@ -35,6 +35,7 @@
 #include <QSerialPortInfo>
 #include <QSoundEffect>
 #include <QString>
+#include <QStringBuilder>
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -55,8 +56,10 @@ MainWindow::MainWindow(QWidget* parent)
 {
     const auto args = QApplication::arguments();
 
-    QString portname {};
+    QString portLocation;
     int baud {};
+    QString manufacturer;
+    QString description;
 
     switch (args.size()) {
 
@@ -66,14 +69,28 @@ MainWindow::MainWindow(QWidget* parent)
         if (!ok || !baud) {
             throw std::runtime_error("Invalid baud: " + args[2].toStdString());
         }
+
         [[fallthrough]];
     }
     case 2: // Filename in cmdline arg
-        portname = args[1];
+        portLocation = args[1];
+        {
+            constexpr std::string_view PREFIX = "/dev/";
+            if (portLocation.startsWith(PREFIX.data())) {
+                const auto portName = portLocation.remove(0, PREFIX.size());
+                QSerialPortInfo portInfo(portLocation);
+                manufacturer = portInfo.manufacturer();
+                description = portInfo.description();
+                qInfo() << portLocation << manufacturer << " " << description;
+            }
+        }
         break;
 
     default: // No args, show msgbox and get it from user
-        std::tie(portname, baud) = getPortFromUser();
+        const auto portInfo = getPortFromUser();
+        portLocation = portInfo.location;
+        manufacturer = portInfo.manufacturer;
+        description = portInfo.description;
     }
 
     elapsedTimer.start();
@@ -89,7 +106,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle(PROJECT_NAME);
 
-    connectToDevice(portname, baud);
+    connectToDevice(portLocation, baud, true, manufacturer, description);
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
@@ -165,15 +182,15 @@ void MainWindow::setProgramState(const ProgramState newState)
     currentProgramState = newState;
 }
 
-std::pair<QString, int> MainWindow::getPortFromUser()
+PortSelectionDialog::PortInfo MainWindow::getPortFromUser()
 {
     PortSelectionDialog dlg;
     if (!dlg.exec()) {
         qInfo() << "No port selection made";
         throw std::runtime_error("No selection made");
     }
-    const auto baud = dlg.getSelectedBaud();
-    return { dlg.getSelectedPortLocation(), baud };
+    selectedPortInfo = dlg.getSelectedPortInfo();
+    return selectedPortInfo;
 }
 
 void MainWindow::handleReadyRead()
@@ -285,9 +302,9 @@ void MainWindow::handleAboutAction()
 void MainWindow::handleConnectAction()
 {
     serialPort->close();
-    const auto [port, baud] = getPortFromUser();
+    const auto [location, manufacturer, description, baud] = getPortFromUser();
     handleClearAction();
-    connectToDevice(port, baud);
+    connectToDevice(location, baud, true, manufacturer, description);
 }
 
 void MainWindow::handleTriggerSetupAction()
@@ -393,13 +410,20 @@ void MainWindow::handleLongTermRunModeAction()
     longTermRunModeDialog->open();
 }
 
-void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr)
+void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr, const QString& manufacturer, const QString& description)
 {
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
     setWindowTitle(PROJECT_NAME + QString(" ") + port);
-    ui->portInfoLabel->setText(QString("%1 │ %2").arg(serialPort->portName(), QString::number(serialPort->baudRate())));
+
+    const QString portInfoText = port
+        % " "
+        % (!baud ? QString() : "| " + QString::number(baud))
+        % (manufacturer.isEmpty() ? QString() : "| " + manufacturer)
+        % (description.isEmpty() ? QString() : "| " + description);
+
+    ui->portInfoLabel->setText(portInfoText);
 
     qInfo() << "Connecting to: " << port << baud;
     serialPort->clearError();

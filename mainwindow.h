@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 // #include <source_location>
+#include "portselectiondialog.h"
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
@@ -81,10 +82,12 @@ private:
     QPointer<KTextEditor::Message> serialErrorMsg;
 
     void setProgramState(const ProgramState newState);
-    [[nodiscard]] static std::pair<QString, int> getPortFromUser();
+    [[nodiscard]] PortSelectionDialog::PortInfo getPortFromUser();
 
-    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
+    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true, const QString& description = "", const QString& manufacturer = "");
+
     QSerialPort* serialPort {};
+    PortSelectionDialog::PortInfo selectedPortInfo {};
     QSoundEffect* sound {};
     std::unique_ptr<TriggerSetupDialog> triggerSetupDialog;
 

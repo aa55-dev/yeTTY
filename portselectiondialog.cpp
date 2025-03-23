@@ -34,20 +34,24 @@ PortSelectionDialog::~PortSelectionDialog()
     delete ui;
 }
 
+PortSelectionDialog::PortInfo PortSelectionDialog::getSelectedPortInfo() const
+{
+    const auto& port = availablePorts.at(ui->portsComboBox->currentIndex());
+    return PortInfo {
+        .location = port.systemLocation(),
+        .manufacturer = port.manufacturer(),
+        .description = port.description(),
+        .baud = getSelectedBaud()
+    };
+}
+
 void PortSelectionDialog::onCurrentIdxChanged(int idx)
 {
     const auto& port = availablePorts.at(idx);
 
-    selectedPortLocation = port.systemLocation();
-
     ui->descriptionLabel->setText(port.description());
     ui->manufacturerLabel->setText(port.manufacturer());
     ui->pidvidLabel->setText(QString::asprintf("%04X:%04X", port.productIdentifier(), port.vendorIdentifier()));
-}
-
-const QString& PortSelectionDialog::getSelectedPortLocation() const
-{
-    return selectedPortLocation;
 }
 
 int PortSelectionDialog::getSelectedBaud() const
