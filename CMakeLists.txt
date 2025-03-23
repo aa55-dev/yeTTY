@@ -66,6 +66,7 @@ if (ENABLE_CLANG_TIDY)
         -misc-include-cleaner,\
         -cppcoreguidelines-pro-type-vararg,\
         -hicpp-vararg,\
+        -altera-struct-pack-align,\
         -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.;--exclude-header-filter=ui_\*")
 endif()
 

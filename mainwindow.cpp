@@ -77,13 +77,11 @@ MainWindow::MainWindow(QWidget* parent)
     case 2: // Filename in cmdline arg
         portLocation = args[1];
         {
-
-            if (portLocation.startsWith(DEV_PREFIX.data())) {
+            if (portLocation.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
                 const auto portName = portLocation.remove(0, DEV_PREFIX.size());
-                QSerialPortInfo portInfo(portLocation);
+                const QSerialPortInfo portInfo(portLocation);
                 manufacturer = portInfo.manufacturer();
                 description = portInfo.description();
-                qInfo() << portLocation << manufacturer << " " << description;
             }
         }
         break;
@@ -601,5 +599,5 @@ void MainWindow::validateZstdResult(const size_t result, const std::experimental
 
 QString MainWindow::getSerialPortPath() const
 {
-    return DEV_PREFIX.data() + serialPort->portName();
+    return QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()) + serialPort->portName();
 }

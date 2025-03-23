@@ -35,7 +35,7 @@ private:
     Ui::PortSelectionDialog* ui {};
     QString selectedPortLocation;
     QList<QSerialPortInfo> availablePorts;
-    int getSelectedBaud() const;
+    [[nodiscard]] int getSelectedBaud() const;
 };
 
 #endif // PORTSELECTIONDIALOG_H

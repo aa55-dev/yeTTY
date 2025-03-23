@@ -73,8 +73,7 @@ private slots:
     void handleLongTermRunModeAction();
     void handleLongTermRunModeDialogDone(int result);
     void handleLongTermRunModeTimer();
-    void handleFileWatchEvent(const QString &path);
-
+    void handleFileWatchEvent(const QString& path);
 
 private:
     static constexpr std::string_view DEV_PREFIX = "/dev/";
@@ -88,7 +87,7 @@ private:
     void setProgramState(const ProgramState newState);
     [[nodiscard]] PortSelectionDialog::PortInfo getPortFromUser();
 
-    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true, const QString& description = "", const QString& manufacturer = "");
+    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true, const QString& manufacturer = "", const QString& description = "");
 
     // Qt is unable to detect disconnection, we need to use inotify to monitor the serial port file path.
     QFileSystemWatcher* fsWatcher;
@@ -131,6 +130,6 @@ private:
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents, const int counter);
     static void validateZstdResult(const size_t result, const std::experimental::source_location srcLoc = std::experimental::source_location::current());
-    [[nodiscard]] QString getSerialPortPath() const ;
+    [[nodiscard]] QString getSerialPortPath() const;
 };
 #endif // MAINWINDOW_H
