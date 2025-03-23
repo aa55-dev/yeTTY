@@ -115,6 +115,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->actionConnectToDevice->setIcon(QIcon::fromTheme("document-open"));
 
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::handleSaveAction);
+    ui->actionSave->setShortcut(QKeySequence::Save);
     ui->actionSave->setIcon(QIcon::fromTheme("document-save"));
 
     connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::handleQuitAction);
