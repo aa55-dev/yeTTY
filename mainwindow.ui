@@ -50,7 +50,7 @@
          <string>CTRL + End</string>
         </property>
         <property name="text">
-         <string>Scroll to end</string>
+         <string>Scroll to &amp;end</string>
         </property>
        </widget>
       </item>

@@ -174,7 +174,7 @@ void MainWindow::setProgramState(const ProgramState newState)
         if (serialErrorMsg) {
             serialErrorMsg->deleteLater();
         }
-        ui->startStopButton->setText("Stop");
+        ui->startStopButton->setText("&Stop");
         ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-stop"));
 
         Q_ASSERT(fsWatcher->files().isEmpty());
@@ -182,7 +182,7 @@ void MainWindow::setProgramState(const ProgramState newState)
 
     } else if (newState == ProgramState::Stopped) {
         qInfo() << "Program stopped";
-        ui->startStopButton->setText("Start");
+        ui->startStopButton->setText("&Start");
         ui->startStopButton->setIcon(QIcon::fromTheme("media-playback-start"));
 
         fsWatcher->removePaths(fsWatcher->files());
