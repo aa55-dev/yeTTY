@@ -437,7 +437,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
-    setWindowTitle(PROJECT_NAME + QString(" ") + port);
+    setWindowTitle(port);
 
     const QString portInfoText = port
         % " "
