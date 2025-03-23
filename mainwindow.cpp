@@ -78,7 +78,9 @@ MainWindow::MainWindow(QWidget* parent)
         portLocation = args[1];
         {
             if (portLocation.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
-                const auto portName = portLocation.remove(0, DEV_PREFIX.size());
+                // This will convert the string in the variable from "/dev/ttyUSB0" to "ttyUSB0". We are
+                // fine since QSerialPort::open will accept either of them.
+                portLocation.remove(0, DEV_PREFIX.size());
                 const QSerialPortInfo portInfo(portLocation);
                 manufacturer = portInfo.manufacturer();
                 description = portInfo.description();
@@ -217,7 +219,7 @@ void MainWindow::handleReadyRead()
 
         // We will keep pushing whatever data we get into a QByteArray till we reach end of line,
         // at which point we search for our trigger keyword in the constructed line.
-        for (const auto i : newData) {
+        for (const auto i : std::as_const(newData)) {
             if (i == '\n') {
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;

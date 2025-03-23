@@ -16,7 +16,7 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     ui->baudRateLineEdit->setText("115200");
     availablePorts = QSerialPortInfo::availablePorts();
 
-    for (const auto& i : availablePorts) {
+    for (const auto& i : std::as_const(availablePorts)) {
         ui->portsComboBox->addItem(i.systemLocation());
     }
 
