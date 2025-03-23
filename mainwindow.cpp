@@ -442,7 +442,7 @@ void MainWindow::setInhibit(const bool enabled)
 
     auto result = sd_bus_open_system(&bus);
     if (result < 0) {
-        qWarning() << "Failed to open bus" << result;
+        qWarning() << "Failed to open systemd bus" << result;
         return;
     }
 
@@ -460,22 +460,21 @@ void MainWindow::setInhibit(const bool enabled)
         "block"); // Mode
 
     if (result <= 0) {
-        qWarning() << "Failed to make bus call" << result;
+        qWarning() << "Failed to make systemd bus call" << result;
         return;
     }
 
     result = sd_bus_message_read_basic(reply, SD_BUS_TYPE_UNIX_FD, &newFd);
     if (result <= 0 || !newFd) {
-        qWarning() << "failed to read response" << result << newFd;
+        qWarning() << "failed to read systemd response" << result << newFd;
         return;
     }
 
     if (error.message || error.name) {
-        qWarning() << "Inhibit failed" << error.message << error.name;
+        qWarning() << "systemd Inhibit failed" << error.message << error.name;
         return;
     }
 
-    qInfo() << "Inhibted";
     inhibitFd = newFd;
 }
 
