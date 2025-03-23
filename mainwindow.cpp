@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget* parent)
         portLocation = portInfo.location;
         manufacturer = portInfo.manufacturer;
         description = portInfo.description;
+        baud = portInfo.baud;
     }
 
     elapsedTimer.start();
