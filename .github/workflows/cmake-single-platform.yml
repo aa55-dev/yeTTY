@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: sudo apt install -y qt6-base-dev qt6-serialport-dev qt6-multimedia-dev libzstd-dev
+      run: sudo apt install -y qt6-base-dev qt6-serialport-dev qt6-multimedia-dev libzstd-dev libkf6texteditor-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
