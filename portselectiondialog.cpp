@@ -17,9 +17,6 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     availablePorts = QSerialPortInfo::availablePorts();
 
     for (const auto& i : availablePorts) {
-        if (i.systemLocation() == "/dev/ttyS0") {
-            continue;
-        }
         ui->portsComboBox->addItem(i.systemLocation());
     }
 
