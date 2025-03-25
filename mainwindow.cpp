@@ -17,7 +17,6 @@
 #include <cstring>
 #include <malloc.h>
 #include <stdexcept>
-#include <tuple>
 #include <unistd.h>
 #include <utility>
 
@@ -54,6 +53,8 @@ MainWindow::MainWindow(QWidget* parent)
     , serialPort(new QSerialPort(this))
     , sound(new QSoundEffect(this))
     , timer(new QTimer(this))
+    , statusBarTimer(new QTimer(this))
+    , statusBarText(new QLabel(this))
     , longTermRunModeTimer(new QTimer(this))
 {
     const auto args = QApplication::arguments();
@@ -146,11 +147,15 @@ MainWindow::MainWindow(QWidget* parent)
     connect(serialPort, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
 
     connect(timer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
+    connect(statusBarTimer, &QTimer::timeout, this, &MainWindow::handleStatusBarTimer);
+    statusBarTimer->setSingleShot(true);
     connect(longTermRunModeTimer, &QTimer::timeout, this, &MainWindow::handleLongTermRunModeTimer);
 
     connect(fsWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::handleFileWatchEvent);
 
     sound->setSource(QUrl::fromLocalFile(QStringLiteral(":/notify.wav")));
+
+    ui->statusbar->addWidget(statusBarText);
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
@@ -173,6 +178,7 @@ void MainWindow::setProgramState(const ProgramState newState)
 #endif
     if (newState == ProgramState::Started) {
         qInfo() << "Program started";
+        statusBarText->setText(QStringLiteral("Running"));
         if (serialErrorMsg) {
             serialErrorMsg->deleteLater();
         }
@@ -184,6 +190,7 @@ void MainWindow::setProgramState(const ProgramState newState)
 
     } else if (newState == ProgramState::Stopped) {
         qInfo() << "Program stopped";
+        statusBarText->setText(QStringLiteral("Stopped"));
         ui->startStopButton->setText(QStringLiteral("&Start"));
         ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-start")));
 
@@ -223,7 +230,8 @@ void MainWindow::handleReadyRead()
             if (i == '\n') {
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;
-                    ui->statusbar->showMessage(QStringLiteral("%1 matches").arg(triggerMatchCount), 3000);
+                    statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword));
+                    statusBarTimer->start(5000);
 
                     // TODO: This is broken. Qt plays the sound for a few times and then stops working.
                     sound->play();
@@ -425,6 +433,21 @@ void MainWindow::handleFileWatchEvent(const QString& path)
     }
 }
 
+void MainWindow::handleStatusBarTimer()
+{
+    auto txt = statusBarText->text();
+    if (txt.startsWith(QStringLiteral("<b>"))) {
+        txt.remove(0, 3);
+        if (txt.endsWith(QStringLiteral("</b>"))) {
+            txt.chop(4);
+        } else {
+            qWarning() << "Invalid string in status bar" << txt;
+        }
+    }
+
+    statusBarText->setText(txt);
+}
+
 void MainWindow::handleLongTermRunModeAction()
 {
     if (!longTermRunModeDialog) {
@@ -453,7 +476,6 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
     serialPort->clearError();
     if (serialPort->open(QIODevice::ReadOnly)) {
         ui->startStopButton->setEnabled(true);
-        ui->statusbar->showMessage(QStringLiteral("Running..."));
         setProgramState(ProgramState::Started);
     } else {
         // We allow the user to open non-serial, static plain text files.

@@ -43,6 +43,7 @@ class QTimer;
 class TriggerSetupDialog;
 class LongTermRunModeDialog;
 class QElapsedTimer;
+class QLabel;
 class QFileSystemWatcher;
 
 class MainWindow final : public QMainWindow {
@@ -74,6 +75,7 @@ private slots:
     void handleLongTermRunModeDialogDone(int result);
     void handleLongTermRunModeTimer();
     void handleFileWatchEvent(const QString& path);
+    void handleStatusBarTimer();
 
 private:
     static constexpr std::string_view DEV_PREFIX = "/dev/";
@@ -107,7 +109,9 @@ private:
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* timer {};
+    QTimer* statusBarTimer {};
 
+    QLabel* statusBarText {};
     QByteArray triggerSearchLine;
 
     // Long term run mode
@@ -131,7 +135,7 @@ private:
 
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents, const int counter);
-    static void validateZstdResult(const size_t result, const std::experimental::source_location &srcLoc = std::experimental::source_location::current());
+    static void validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc = std::experimental::source_location::current());
     [[nodiscard]] QString getSerialPortPath() const;
 };
 #endif // MAINWINDOW_H
