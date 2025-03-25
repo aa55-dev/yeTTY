@@ -61,8 +61,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     QString portLocation;
     int baud {};
-    QString manufacturer;
-    QString description;
 
     switch (args.size()) {
 
@@ -78,23 +76,11 @@ MainWindow::MainWindow(QWidget* parent)
     case 2: // Filename in cmdline arg
         portLocation = args[1];
         {
-            if (portLocation.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
-                // This will convert the string in the variable from "/dev/ttyUSB0" to "ttyUSB0". We are
-                // fine since QSerialPort::open will accept either of them.
-                portLocation.remove(0, DEV_PREFIX.size());
-                const QSerialPortInfo portInfo(portLocation);
-                manufacturer = portInfo.manufacturer();
-                description = portInfo.description();
-            }
         }
         break;
 
     default: // No args, show msgbox and get it from user
-        const auto portInfo = getPortFromUser();
-        portLocation = portInfo.location;
-        manufacturer = portInfo.manufacturer;
-        description = portInfo.description;
-        baud = portInfo.baud;
+        std::tie(portLocation, baud) = getPortFromUser();
     }
 
     elapsedTimer.start();
@@ -111,7 +97,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle(QStringLiteral(PROJECT_NAME));
 
-    connectToDevice(portLocation, baud, true, manufacturer, description);
+    connectToDevice(portLocation, baud);
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
@@ -202,15 +188,14 @@ void MainWindow::setProgramState(const ProgramState newState)
     currentProgramState = newState;
 }
 
-PortSelectionDialog::PortInfo MainWindow::getPortFromUser()
+std::pair<QString, int> MainWindow::getPortFromUser()
 {
     PortSelectionDialog dlg;
     if (!dlg.exec()) {
         qInfo() << "No port selection made";
         throw std::runtime_error("No selection made");
     }
-    selectedPortInfo = dlg.getSelectedPortInfo();
-    return selectedPortInfo;
+    return dlg.getSelectedPortInfo();
 }
 
 void MainWindow::handleReadyRead()
@@ -323,9 +308,9 @@ void MainWindow::handleConnectAction()
 {
     serialPort->close();
     timer->stop();
-    const auto [location, manufacturer, description, baud] = getPortFromUser();
+    const auto [location, baud] = getPortFromUser();
     handleClearAction();
-    connectToDevice(location, baud, true, manufacturer, description);
+    connectToDevice(location, baud, true);
 }
 
 void MainWindow::handleTriggerSetupAction()
@@ -457,13 +442,14 @@ void MainWindow::handleLongTermRunModeAction()
     longTermRunModeDialog->open();
 }
 
-void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr, const QString& manufacturer, const QString& description)
+void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr)
 {
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
     setWindowTitle(port);
 
+    const auto [manufacturer, description] = getPortInfo(port);
     const QString portInfoText = port
         % " "
         % (!baud ? QString() : QStringLiteral("| ") + QString::number(baud))
@@ -626,4 +612,14 @@ void MainWindow::validateZstdResult(const size_t result, const std::experimental
 QString MainWindow::getSerialPortPath() const
 {
     return QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()) + serialPort->portName();
+}
+
+std::pair<QString, QString> MainWindow::getPortInfo(QString portLocation)
+{
+    if (portLocation.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
+        portLocation.remove(0, DEV_PREFIX.size());
+    }
+    const QSerialPortInfo portInfo(portLocation);
+
+    return { portInfo.manufacturer(), portInfo.description() };
 }

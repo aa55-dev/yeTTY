@@ -31,15 +31,10 @@ PortSelectionDialog::~PortSelectionDialog()
     delete ui;
 }
 
-PortSelectionDialog::PortInfo PortSelectionDialog::getSelectedPortInfo() const
+std::pair<QString, int> PortSelectionDialog::getSelectedPortInfo() const
 {
     const auto& port = availablePorts.at(ui->portsComboBox->currentIndex());
-    return PortInfo {
-        .location = port.systemLocation(),
-        .manufacturer = port.manufacturer(),
-        .description = port.description(),
-        .baud = getSelectedBaud()
-    };
+    return { port.portName(), getSelectedBaud() };
 }
 
 void PortSelectionDialog::onCurrentIdxChanged(int idx)
