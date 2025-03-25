@@ -15,8 +15,11 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
+#include <grp.h>
 #include <malloc.h>
+#include <pwd.h>
 #include <stdexcept>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
 
@@ -464,8 +467,23 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         ui->startStopButton->setEnabled(true);
         setProgramState(ProgramState::Started);
     } else {
+        if (errno == EACCES) {
+
+            if (!isUserPermissionSetupCorrectly()) {
+                auto username = qEnvironmentVariable("USER");
+                if (username.isEmpty()) {
+                    username = "YOUR_USERNAME";
+                }
+                QMessageBox::critical(this, tr("Permission denied"),
+                    tr("Permission denied when attempting to open ") % port % tr(". Add the current user to the dialout group by running the command given below and restart your system.\n\n")
+                        % "sudo usermod -a -G dialout " % username);
+                return;
+            } else {
+                qWarning() << "Permission denied due to unknown reason: ";
+            }
+        }
+
         // We allow the user to open non-serial, static plain text files.
-        qInfo() << "Opening as ordinary file";
         QFile file(port);
         if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
@@ -622,4 +640,32 @@ std::pair<QString, QString> MainWindow::getPortInfo(QString portLocation)
     const QSerialPortInfo portInfo(portLocation);
 
     return { portInfo.manufacturer(), portInfo.description() };
+}
+
+bool MainWindow::isUserPermissionSetupCorrectly()
+{
+    const auto* username = getenv("USER");
+    if (!username) {
+        throw std::runtime_error("Failed to read username");
+    }
+    errno = 0;
+    const auto* pwdEntry = getpwnam(username);
+    if (!pwdEntry) {
+        throw std::runtime_error("Failed to read pwdentry: " + std::to_string(errno));
+    }
+
+    constexpr size_t MAX_SIZE = 64;
+    std::array<gid_t, MAX_SIZE> groupList {};
+    int groupCount = MAX_SIZE;
+
+    if (getgrouplist(username, pwdEntry->pw_gid, groupList.data(), &groupCount) < 0) {
+        throw std::runtime_error("group size exceeded");
+    }
+
+    const auto* dialoutGroup = getgrnam(GROUP_DIALOUT);
+
+    Q_ASSERT(groupCount > 0);
+    return std::any_of(groupList.begin(),
+        groupList.begin() + groupCount,
+        [&dialoutGroup](const gid_t i) { return i == dialoutGroup->gr_gid; });
 }

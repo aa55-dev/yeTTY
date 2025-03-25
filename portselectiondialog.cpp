@@ -34,7 +34,7 @@ PortSelectionDialog::~PortSelectionDialog()
 std::pair<QString, int> PortSelectionDialog::getSelectedPortInfo() const
 {
     const auto& port = availablePorts.at(ui->portsComboBox->currentIndex());
-    return { port.portName(), getSelectedBaud() };
+    return { port.systemLocation(), getSelectedBaud() };
 }
 
 void PortSelectionDialog::onCurrentIdxChanged(int idx)
