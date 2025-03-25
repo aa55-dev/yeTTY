@@ -21,7 +21,7 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     }
 
     // set focus so that enter works
-    ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setFocus();
+    ui->portsComboBox->setFocus();
 
     ui->baudRateLineEdit->setValidator(new QIntValidator(1, 100 * 1000 * 1000, this)); // NOLINT(cppcoreguidelines-owning-memory)
 }
