@@ -184,7 +184,7 @@ void MainWindow::setProgramState(const ProgramState newState)
 
         fsWatcher->removePaths(fsWatcher->files());
     } else {
-        throw std::runtime_error("Unknown state");
+        qCritical() << "Invalid state";
     }
 
     currentProgramState = newState;
@@ -409,7 +409,11 @@ void MainWindow::handleLongTermRunModeTimer()
         longTermRunModeStartTime = elapsedTimer.elapsed();
 
         const auto utfTxt = doc->text().toUtf8();
-        writeCompressedFile(utfTxt, fileCounter++);
+        try {
+            writeCompressedFile(utfTxt, fileCounter++);
+        } catch (std::exception& e) {
+            qCritical() << "Exception in writing file: " << e.what();
+        }
 
         handleClearAction();
     }
@@ -471,7 +475,15 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
     } else {
         if (errno == EACCES) {
 
-            if (!isUserPermissionSetupCorrectly()) {
+            bool isPermSetupCorrect = true;
+
+            try {
+                isPermSetupCorrect = isUserPermissionSetupCorrectly();
+            } catch (std::runtime_error& e) {
+                qCritical() << "Exception in permission check: " << e.what();
+            }
+
+            if (!isPermSetupCorrect) {
                 auto username = qEnvironmentVariable("USER");
                 if (username.isEmpty()) {
                     username = QStringLiteral("YOUR_USERNAME");
@@ -481,6 +493,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
                         % "sudo usermod -a -G dialout " % username);
                 return;
             }
+
             // This can happen if the user added the account to the dialout group but hasn't restarted the system yet.
 
             // but it can be falsely triggered if the USB was just plugged in when we tried to open it.
