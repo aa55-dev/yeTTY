@@ -107,7 +107,7 @@ private:
     int triggerMatchCount {};
 
     ProgramState currentProgramState = ProgramState::Unknown;
-    QTimer* timer {};
+    QTimer* autoRetryTimer {};
     QTimer* statusBarTimer {};
 
     QLabel* statusBarText {};

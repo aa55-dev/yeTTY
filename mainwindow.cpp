@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget* parent)
     , fsWatcher(new QFileSystemWatcher(this))
     , serialPort(new QSerialPort(this))
     , sound(new QSoundEffect(this))
-    , timer(new QTimer(this))
+    , autoRetryTimer(new QTimer(this))
     , statusBarTimer(new QTimer(this))
     , statusBarText(new QLabel(this))
     , longTermRunModeTimer(new QTimer(this))
@@ -136,7 +136,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
     connect(serialPort, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
 
-    connect(timer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
+    connect(autoRetryTimer, &QTimer::timeout, this, &MainWindow::handleRetryConnection);
     connect(statusBarTimer, &QTimer::timeout, this, &MainWindow::handleStatusBarTimer);
     statusBarTimer->setSingleShot(true);
     connect(longTermRunModeTimer, &QTimer::timeout, this, &MainWindow::handleLongTermRunModeTimer);
@@ -267,9 +267,9 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     prevErrCode = error;
     setProgramState(ProgramState::Stopped);
 
-    if (!timer->isActive()) {
+    if (!autoRetryTimer->isActive()) {
         // Lets try to reconnect after a while
-        timer->start(1000);
+        autoRetryTimer->start(1000);
     }
 }
 
@@ -312,7 +312,7 @@ void MainWindow::handleConnectAction()
     if (serialPort->isOpen()) {
         closeSerialPort();
     }
-    timer->stop();
+    autoRetryTimer->stop();
     const auto [location, baud] = getPortFromUser();
     handleClearAction();
 
@@ -362,7 +362,7 @@ void MainWindow::handleRetryConnection()
         connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
     } else {
         qWarning() << "Serial port is open, stopping retry timer";
-        timer->stop();
+        autoRetryTimer->stop();
     }
 }
 
