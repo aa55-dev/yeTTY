@@ -245,9 +245,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
         return;
     }
 
-    if (serialPort->isOpen()) {
-        serialPort->close();
-    }
+    closeSerialPort();
 
     auto errMsg = QStringLiteral("Error: ") + QVariant::fromValue(error).toString();
 
@@ -311,11 +309,12 @@ void MainWindow::handleAboutAction()
 void MainWindow::handleConnectAction()
 {
     if (serialPort->isOpen()) {
-        serialPort->close();
+        closeSerialPort();
     }
     timer->stop();
     const auto [location, baud] = getPortFromUser();
     handleClearAction();
+
     connectToDevice(location, baud, true);
 }
 
@@ -346,8 +345,7 @@ void MainWindow::handleStartStopButton()
 {
     if (currentProgramState == ProgramState::Started) {
         qInfo() << "Closing connection on button press";
-        serialPort->close();
-        setProgramState(ProgramState::Stopped);
+        closeSerialPort();
     } else {
         qInfo() << "Starting connection on button press";
         connectToDevice(serialPort->portName(), serialPort->baudRate());
@@ -637,6 +635,14 @@ void MainWindow::validateZstdResult(const size_t result, const std::experimental
 QString MainWindow::getSerialPortPath() const
 {
     return QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()) + serialPort->portName();
+}
+
+void MainWindow::closeSerialPort()
+{
+    if (serialPort->isOpen()) {
+        serialPort->close();
+    }
+    setProgramState(ProgramState::Stopped);
 }
 
 std::pair<QString, QString> MainWindow::getPortInfo(QString portLocation)

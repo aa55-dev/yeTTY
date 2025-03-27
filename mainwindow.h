@@ -135,6 +135,7 @@ private:
     void writeCompressedFile(const QByteArray& contents, const int counter);
     static void validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc = std::experimental::source_location::current());
     [[nodiscard]] QString getSerialPortPath() const;
+    void closeSerialPort();
     [[nodiscard]] static std::pair<QString, QString> getPortInfo(QString portLocation);
     // Checks if the user is in "dialout" group
     [[nodiscard]] static bool isUserPermissionSetupCorrectly();
