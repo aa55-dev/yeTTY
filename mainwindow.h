@@ -141,5 +141,6 @@ private:
     [[nodiscard]] static std::pair<QString, QString> getPortInfo(QString portLocation);
     // Checks if the user is in "dialout" group
     [[nodiscard]] static bool isUserPermissionSetupCorrectly();
+    [[nodiscard]] bool isRecentlyEnumerated();
 };
 #endif // MAINWINDOW_H
