@@ -257,7 +257,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
         errMsg += QStringLiteral(": %1 detached").arg(portName);
     }
     qCritical() << "Serial port error: " << error;
-    ui->statusbar->showMessage(errMsg);
+    statusBarText->setText(errMsg);
     if (!serialErrorMsg) {
         serialErrorMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
     }
