@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget* parent)
     , statusBarText(new QLabel(this))
     , longTermRunModeTimer(new QTimer(this))
 {
+
     const auto args = QApplication::arguments();
 
     QString portLocation;
@@ -472,15 +473,18 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
             if (!isUserPermissionSetupCorrectly()) {
                 auto username = qEnvironmentVariable("USER");
                 if (username.isEmpty()) {
-                    username = "YOUR_USERNAME";
+                    username = QStringLiteral("YOUR_USERNAME");
                 }
                 QMessageBox::critical(this, tr("Permission denied"),
                     tr("Permission denied when attempting to open ") % port % tr(". Add the current user to the dialout group by running the command given below and restart your system.\n\n")
                         % "sudo usermod -a -G dialout " % username);
                 return;
-            } else {
-                qWarning() << "Permission denied due to unknown reason: ";
             }
+            // This can happen if the user added the account to the dialout group but hasn't restarted the system yet.
+            qWarning() << "Permission denied, possibly not restarted";
+            QMessageBox::critical(this, tr("Permission denied"),
+                tr("Permission denied when attempting to open ") % port % tr(".\nHave you restarted the system after adding the present user to dialout group?"));
+            return;
         }
 
         // We allow the user to open non-serial, static plain text files.
@@ -558,7 +562,8 @@ std::string MainWindow::getErrorStr()
 {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     std::array<char, 128> buffer;
-    return strerror_r(errno, buffer.data(), buffer.size());
+    const auto* errStr = strerror_r(errno, buffer.data(), buffer.size());
+    return errStr ? errStr : "";
 }
 
 void MainWindow::writeCompressedFile(const QByteArray& contents, const int counter)
@@ -644,28 +649,61 @@ std::pair<QString, QString> MainWindow::getPortInfo(QString portLocation)
 
 bool MainWindow::isUserPermissionSetupCorrectly()
 {
-    const auto* username = getenv("USER");
-    if (!username) {
+    const auto username = qEnvironmentVariable("USER").toStdString();
+    if (username.empty()) {
         throw std::runtime_error("Failed to read username");
     }
-    errno = 0;
-    const auto* pwdEntry = getpwnam(username);
-    if (!pwdEntry) {
-        throw std::runtime_error("Failed to read pwdentry: " + std::to_string(errno));
+
+    const auto pwmnamBufferSize = sysconf(_SC_GETPW_R_SIZE_MAX);
+
+    if (pwmnamBufferSize <= 0) {
+        throw std::runtime_error("Failed to read pwmnambuf size");
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+    const auto pwnamBuffer = std::make_unique<char[]>(static_cast<size_t>(pwmnamBufferSize));
+    struct passwd tmpPwd {};
+    struct passwd* pwdResult {};
+
+    if (getpwnam_r(username.c_str(), &tmpPwd, pwnamBuffer.get(), static_cast<size_t>(pwmnamBufferSize), &pwdResult)) {
+        throw std::runtime_error("pwmnam failed");
+    }
+
+    if (!pwdResult) {
+        throw std::runtime_error("pwmnam found no match");
     }
 
     constexpr size_t MAX_SIZE = 64;
     std::array<gid_t, MAX_SIZE> groupList {};
     int groupCount = MAX_SIZE;
 
-    if (getgrouplist(username, pwdEntry->pw_gid, groupList.data(), &groupCount) < 0) {
+    if (getgrouplist(username.c_str(), pwdResult->pw_gid, groupList.data(), &groupCount) < 0) {
         throw std::runtime_error("group size exceeded");
     }
 
-    const auto* dialoutGroup = getgrnam(GROUP_DIALOUT);
+    if (groupCount <= 0) {
+        throw std::runtime_error("Failed to found group list");
+    }
 
-    Q_ASSERT(groupCount > 0);
+    const auto grnamBufferSize = sysconf(_SC_GETGR_R_SIZE_MAX);
+
+    if (grnamBufferSize <= 0) {
+        throw std::runtime_error("Failed to read grnambuf size");
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+    const auto grnamBuffer = std::make_unique<char[]>(static_cast<size_t>(grnamBufferSize));
+    struct group tmpGroup {};
+    struct group* groupResult {};
+
+    if (getgrnam_r(GROUP_DIALOUT, &tmpGroup, grnamBuffer.get(), static_cast<size_t>(grnamBufferSize), &groupResult)) {
+        throw std::runtime_error("grnam failed");
+    }
+    if (!groupResult) {
+        throw std::runtime_error("grnam failed");
+    }
+
     return std::any_of(groupList.begin(),
         groupList.begin() + groupCount,
-        [&dialoutGroup](const gid_t i) { return i == dialoutGroup->gr_gid; });
+        [&groupResult](const gid_t i) { return i == groupResult->gr_gid; });
 }
