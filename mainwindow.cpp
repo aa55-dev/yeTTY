@@ -310,7 +310,9 @@ void MainWindow::handleAboutAction()
 
 void MainWindow::handleConnectAction()
 {
-    serialPort->close();
+    if (serialPort->isOpen()) {
+        serialPort->close();
+    }
     timer->stop();
     const auto [location, baud] = getPortFromUser();
     handleClearAction();
