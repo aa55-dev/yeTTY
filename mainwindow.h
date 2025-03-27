@@ -84,7 +84,9 @@ private:
     KTextEditor::Editor* editor {};
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
-    QPointer<KTextEditor::Message> serialErrorMsg;
+
+    QSerialPort::SerialPortError prevErrCode = QSerialPort::SerialPortError::NoError;
+    QString prevErrMsg;
 
     void setProgramState(const ProgramState newState);
     [[nodiscard]] static std::pair<QString, int> getPortFromUser();

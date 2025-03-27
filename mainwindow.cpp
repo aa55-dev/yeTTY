@@ -169,9 +169,7 @@ void MainWindow::setProgramState(const ProgramState newState)
     if (newState == ProgramState::Started) {
         qInfo() << "Program started";
         statusBarText->setText(QStringLiteral("Running"));
-        if (serialErrorMsg) {
-            serialErrorMsg->deleteLater();
-        }
+
         ui->startStopButton->setText(QStringLiteral("&Stop"));
         ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-stop")));
 
@@ -256,14 +254,17 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     }
     qCritical() << "Serial port error: " << error;
     statusBarText->setText(errMsg);
-    if (!serialErrorMsg) {
-        serialErrorMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
+
+    // When USB is disconnected we get a QSerialPort::ResourceError and then a QSerialPort::DeviceNotFoundError when our retry timer
+    // tries to reconnect to the port. If the user has dismissed the first error message we should not show the second error message
+    const auto duplicateError = (error == QSerialPort::DeviceNotFoundError && prevErrCode == QSerialPort::ResourceError);
+
+    if (prevErrMsg != errMsg && !duplicateError) {
+        doc->postMessage(new KTextEditor::Message(errMsg, KTextEditor::Message::Error)); // NOLINT(cppcoreguidelines-owning-memory)
     }
 
-    if (errMsg != serialErrorMsg->text()) {
-        serialErrorMsg->setText(errMsg);
-        doc->postMessage(serialErrorMsg);
-    }
+    prevErrMsg = errMsg;
+    prevErrCode = error;
     setProgramState(ProgramState::Stopped);
 
     if (!timer->isActive()) {
