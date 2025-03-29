@@ -165,4 +165,4 @@ install(TARGETS ${PROJECT_NAME}
 
 install(FILES resources/dev.aa55.yeTTY.desktop DESTINATION share/applications)
 install(FILES resources/dev.aa55.yeTTY.svgz DESTINATION share/icons/hicolor/scalable/apps/)
-install(FILES resources/dev.aa55.yetty.yetty.metainfo.xml DESTINATION share/metainfo/)
+install(FILES resources/dev.aa55.yetty.metainfo.xml DESTINATION share/metainfo/)
