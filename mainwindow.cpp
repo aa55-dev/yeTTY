@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget* parent)
     editor = KTextEditor::Editor::instance();
     doc = editor->createDocument(this);
     doc->setHighlightingMode(HIGHLIGHT_MODE);
+    doc->setReadWrite(false);
 
     view = doc->createView(this);
     view->setStatusBarEnabled(false);
