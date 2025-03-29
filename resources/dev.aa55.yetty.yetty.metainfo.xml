@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.aa55.yetty</id>
+  
+  <name>yeTTY</name>
+  <summary>yeTTY is an open source application for embedded developers to view logs from serial port.</summary>
+  
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+  
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  
+  <description>
+    <p>
+      yeTTY is an open source application for embedded developers to view logs from serial port.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">dev.aa55.yeTTY.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://yetty.aa55.dev/img/screenshot1.png</image>
+    </screenshot>
+  </screenshots>
+</component>
