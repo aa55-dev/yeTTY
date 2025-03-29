@@ -5,19 +5,19 @@ yeTTY is an open source application for embedded developers to view logs from se
 ## Features
 1. Text highlighting
 
-yeTTY uses KDE's KTextEditor for displaying the logs. KTextEditor provides yeTTY with syntax highlighting and text search.
+    yeTTY uses KDE's KTextEditor for displaying the logs. KTextEditor provides yeTTY with syntax highlighting and text search.
 
 2. Auto reconnection
 
-In case your board gets disconnected, yeTTY will keep on attempting to reconnect to the same port.
+    In case your board gets disconnected, yeTTY will keep on attempting to reconnect to the same port.
 
 3. Audio alert on string match
 
-yeTTY can monitor the output for a specified keyword and alert you with a sound upon match.
+    yeTTY can monitor the output for a specified keyword and alert you with a sound upon match.
 
 4. Long term run mode
 
-This is useful if you need to keep the board running overnight. yeTTY will capture the logs from serial port and compress it and save them to storage.
+    This is useful if you need to keep the board running overnight. yeTTY will capture the logs from serial port and compress it and save them to storage.
 
 ## Building
 
