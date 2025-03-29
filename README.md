@@ -19,7 +19,6 @@ sudo apt install cmake g++ qt6-base-dev qt6-serialport-dev qt6-multimedia-dev li
 ```
 cmake -B build .
 cmake --build build
-
 ```
 
 **3. Install**
