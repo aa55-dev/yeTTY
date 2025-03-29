@@ -2,11 +2,8 @@
 #define MAINWINDOW_H
 
 #include <cstdint>
-#include <qtypes.h>
 #include <utility>
 #include <vector>
-// #include <source_location>
-#include "portselectiondialog.h"
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
@@ -15,8 +12,6 @@
 #include <QtSerialPort/QSerialPort>
 #include <cstdlib>
 #include <experimental/source_location>
-#include <qtconfigmacros.h>
-#include <qtmetamacros.h>
 #include <zstd.h>
 
 QT_BEGIN_NAMESPACE

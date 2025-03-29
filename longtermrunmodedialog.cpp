@@ -1,5 +1,4 @@
 #include "longtermrunmodedialog.h"
-
 #include "ui_longtermrunmodedialog.h"
 
 #include <QDebug>
@@ -12,7 +11,6 @@
 #include <QStringLiteral>
 #include <QToolButton>
 #include <QWidget>
-#include <QtLogging>
 
 LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     : QDialog(parent)

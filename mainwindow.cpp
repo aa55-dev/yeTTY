@@ -217,7 +217,7 @@ void MainWindow::handleReadyRead()
             if (i == '\n') {
                 if (triggerSearchLine.contains(triggerKeyword)) {
                     triggerMatchCount++;
-                    statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword));
+                    statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword.data()));
                     statusBarTimer->start(5000);
 
                     // TODO: This is broken. Qt plays the sound for a few times and then stops working.

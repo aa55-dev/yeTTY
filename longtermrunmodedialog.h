@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QUrl>
 #include <QWidget>
-#include <qtmetamacros.h>
 
 namespace Ui {
 class LongTermRunModeDialog;
