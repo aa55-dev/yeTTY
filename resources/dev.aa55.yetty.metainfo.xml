@@ -3,10 +3,14 @@
   <id>dev.aa55.yetty</id>
   
   <name>yeTTY</name>
-  <summary>yeTTY is an open source application for embedded developers to view logs from serial port.</summary>
+  <summary>yeTTY is an open source application for embedded developers to view logs from serial port</summary>
   
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>AGPL-3.0-or-later</project_license>
+  <developer id="aa55.dev">
+    <name translate="no">AA55</name>
+    <url>https://yetty.aa55.dev</url>
+  </developer>
   
   <supports>
     <control>pointing</control>
@@ -20,7 +24,9 @@
     </p>
   </description>
   
+  <content_rating type="oars-1.0" />
   <launchable type="desktop-id">dev.aa55.yeTTY.desktop</launchable>
+  <url type="homepage">https://yetty.aa55.dev</url>
   <screenshots>
     <screenshot type="default">
       <image>https://yetty.aa55.dev/img/screenshot1.png</image>
