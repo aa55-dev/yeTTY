@@ -156,6 +156,8 @@ if(libsystemd_FOUND)
     message("Building with systemd inhibit")
     target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::libsystemd)
     target_compile_definitions(${PROJECT_NAME} PRIVATE SYSTEMD_AVAILABLE)
+else()
+  message("Building without systemd inhibit")
 endif()
 
 
