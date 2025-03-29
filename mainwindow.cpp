@@ -530,7 +530,7 @@ void MainWindow::setInhibit(const bool enabled)
         }
 
         if (const auto result = ::close(inhibitFd); result) {
-            qWarning() << "failed to close systemd fd: " << getErrorStr();
+            qWarning() << "failed to close systemd fd: " << getErrorStr().c_str();
         };
 
         inhibitFd = 0;
