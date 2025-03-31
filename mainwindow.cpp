@@ -451,10 +451,13 @@ void MainWindow::handleLongTermRunModeTimer()
     }
 
     if (shouldSave) {
-
         longTermRunModeStartTime = elapsedTimer.elapsed();
 
         const auto utfTxt = doc->text().toUtf8();
+        if (utfTxt.isEmpty()) {
+            qInfo() << "Nothing to save";
+            return;
+        }
         try {
             writeCompressedFile(utfTxt, fileCounter);
             handleClearAction();
