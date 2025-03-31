@@ -324,6 +324,10 @@ void MainWindow::handleSaveAction()
 
 void MainWindow::handleClearAction()
 {
+    if (longTermRunModeEnabled) {
+        QMessageBox::critical(this, "Long term run mode active", "Long term run mode is active, please disable it before attempting to clear text");
+        return;
+    }
     doc->setReadWrite(true);
     doc->setModified(false);
     doc->closeUrl();
@@ -353,6 +357,10 @@ void MainWindow::handleAboutAction()
 
 void MainWindow::handleConnectAction()
 {
+    if (longTermRunModeEnabled) {
+        QMessageBox::critical(this, "Long term run mode active", "Long term run mode is active, please disable it before opening new port");
+        return;
+    }
     stop();
     autoRetryTimer->stop();
     const auto [location, baud] = getPortFromUser();
