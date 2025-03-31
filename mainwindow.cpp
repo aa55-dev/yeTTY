@@ -169,6 +169,7 @@ MainWindow::~MainWindow()
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void MainWindow::control(const QString& port, const QString& action, QString& out)
 {
+    qWarning() << "DBus" << port << action;
     if (port != serialPort->portName()) {
         out = QStringLiteral("invalid port, currently connected to %1").arg(serialPort->portName());
         qWarning() << out;
@@ -176,7 +177,9 @@ void MainWindow::control(const QString& port, const QString& action, QString& ou
     }
 
     if (action == DBUS_START) {
-        start();
+        if (!serialPort->isOpen()) {
+            start();
+        }
     } else if (action == DBUS_STOP) {
         stop();
         statusBarText->setText(QStringLiteral("Stopped by yetty_suspend"));
