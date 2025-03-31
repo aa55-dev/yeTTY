@@ -406,11 +406,21 @@ void MainWindow::handleRetryConnection()
     // This can end up opening the wrong port if the user is plugging in multiple serial devices
     // and a new device enumerates to the same name as the old one.
     if (!serialPort->isOpen()) {
+        autoRetryCounter++;
         qInfo() << "Retrying connection";
         connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
+
+        if (serialPort->isOpen()) {
+            autoRetryTimer->stop();
+            autoRetryCounter = 0;
+        } else {
+            statusBarText->setText(QStringLiteral("Auto reconnect attempts: %1").arg(autoRetryCounter));
+        }
     } else {
-        qWarning() << "Serial port is open, stopping retry timer";
+        // This should not happen since we stop the timer above
+        qWarning() << "retry timer still active";
         autoRetryTimer->stop();
+        autoRetryCounter = 0;
     }
 }
 

@@ -111,6 +111,7 @@ private:
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* autoRetryTimer {};
+    size_t autoRetryCounter {};
     QTimer* statusBarTimer {};
 
     QLabel* statusBarText {};
