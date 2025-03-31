@@ -325,7 +325,8 @@ void MainWindow::handleSaveAction()
 void MainWindow::handleClearAction(const bool force)
 {
     if (longTermRunModeEnabled && !force) {
-        QMessageBox::critical(this, "Long term run mode active", "Long term run mode is active, please disable it before attempting to clear text");
+        QMessageBox::critical(this, QStringLiteral("Long term run mode active"),
+            QStringLiteral("Long term run mode is active, please disable it before attempting to clear text"));
         return;
     }
     doc->setReadWrite(true);
@@ -358,7 +359,8 @@ void MainWindow::handleAboutAction()
 void MainWindow::handleConnectAction()
 {
     if (longTermRunModeEnabled) {
-        QMessageBox::critical(this, "Long term run mode active", "Long term run mode is active, please disable it before opening new port");
+        QMessageBox::critical(this, QStringLiteral("Long term run mode active"),
+            QStringLiteral("Long term run mode is active, please disable it before opening new port"));
         return;
     }
     stop();
@@ -368,7 +370,7 @@ void MainWindow::handleConnectAction()
         handleClearAction();
         connectToDevice(location, baud);
     } catch (std::runtime_error& e) {
-        QMessageBox::critical(this, "Error", e.what());
+        QMessageBox::critical(this, QStringLiteral("Error"), e.what());
     }
 }
 
