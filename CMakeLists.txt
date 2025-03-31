@@ -141,32 +141,30 @@ add_link_options(-Wl,-z,now)
 add_link_options(-Wl,--as-needed)
 add_link_options(-Wl,--no-copy-dt-needed-entries)
 
-set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        portselectiondialog.cpp
-        portselectiondialog.h
-        portselectiondialog.ui
-        yetty.version.h.in
-        resources/resources.qrc
-        triggersetupdialog.h
-        triggersetupdialog.cpp
-        triggersetupdialog.ui
-        longtermrunmodedialog.h
-        longtermrunmodedialog.cpp
-        longtermrunmodedialog.ui
-        dbus_common.hpp
-)
-
 configure_file(yetty.version.h.in ${CMAKE_CURRENT_BINARY_DIR}/yetty.version.h @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(yetty_suspend yetty_suspend.cpp)
 target_link_libraries(yetty_suspend PRIVATE Qt::DBus)
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+add_executable(${PROJECT_NAME}
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+    portselectiondialog.cpp
+    portselectiondialog.h
+    portselectiondialog.ui
+    yetty.version.h.in
+    resources/resources.qrc
+    triggersetupdialog.h
+    triggersetupdialog.cpp
+    triggersetupdialog.ui
+    longtermrunmodedialog.h
+    longtermrunmodedialog.cpp
+    longtermrunmodedialog.ui
+    dbus_common.hpp
+    common.hpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "common.hpp"
 #include "dbus_common.hpp"
 #include "longtermrunmodedialog.h"
 #include "portselectiondialog.h"
@@ -38,6 +39,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSerialPortInfo>
+#include <QSettings>
 #include <QSoundEffect>
 #include <QString>
 #include <QStringBuilder>
@@ -165,6 +167,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+    QSettings settings;
+    settings.setValue(SETTINGS_LAST_USED_PORT, QStringList { serialPort->portName(), QString::number(serialPort->baudRate()) });
     delete ui;
     ZSTD_freeCCtx(zstdCtx);
     zstdCtx = nullptr;
