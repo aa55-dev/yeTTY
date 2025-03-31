@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "dbus_common.hpp"
 #include "longtermrunmodedialog.h"
 #include "portselectiondialog.h"
 #include "triggersetupdialog.h"
@@ -25,6 +26,7 @@
 
 #include <QApplication>
 #include <QCoreApplication>
+#include <QDBusConnection>
 #include <QDateTime>
 #include <QDebug>
 #include <QEvent>
@@ -148,6 +150,11 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->statusbar->addWidget(statusBarText);
 
+    QDBusConnection connection = QDBusConnection::sessionBus();
+
+    connection.registerService(DBUS_SERVICE_NAME + ("-" + QString::number(getpid())));
+    connection.registerObject("/", DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
+
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
 
@@ -156,6 +163,33 @@ MainWindow::~MainWindow()
     delete ui;
     ZSTD_freeCCtx(zstdCtx);
     zstdCtx = nullptr;
+}
+
+void MainWindow::control(const QString& port, const QString& action, QString& out)
+{
+    if (port != serialPort->portName()) {
+        out = QStringLiteral("invalid port, currently connected to %1").arg(serialPort->portName());
+        qWarning() << out;
+        return;
+    }
+
+    if (action == DBUS_START) {
+        start();
+    } else if (action == DBUS_STOP) {
+        stop();
+        statusBarText->setText(QStringLiteral("Stopped by yetty_suspend"));
+    } else {
+        out = QStringLiteral("Invalid action: %1").arg(action);
+        qWarning() << out;
+        return;
+    }
+
+    out = DBUS_RESULT_SUCCESS;
+}
+
+void MainWindow::portName(QString& out)
+{
+    out = serialPort->portName();
 }
 
 void MainWindow::setProgramState(const ProgramState newState)
@@ -244,7 +278,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
         return;
     }
 
-    closeSerialPort();
+    stop();
 
     auto errMsg = QStringLiteral("Error: ") + QVariant::fromValue(error).toString();
 
@@ -310,14 +344,12 @@ void MainWindow::handleAboutAction()
 
 void MainWindow::handleConnectAction()
 {
-    if (serialPort->isOpen()) {
-        closeSerialPort();
-    }
+    stop();
     autoRetryTimer->stop();
     const auto [location, baud] = getPortFromUser();
     handleClearAction();
 
-    connectToDevice(location, baud, true);
+    connectToDevice(location, baud);
 }
 
 void MainWindow::handleTriggerSetupAction()
@@ -346,11 +378,9 @@ void MainWindow::handleTriggerSetupDialogDone(int result)
 void MainWindow::handleStartStopButton()
 {
     if (currentProgramState == ProgramState::Started) {
-        qInfo() << "Closing connection on button press";
-        closeSerialPort();
+        stop();
     } else {
-        qInfo() << "Starting connection on button press";
-        connectToDevice(serialPort->portName(), serialPort->baudRate());
+        start();
     }
 }
 
@@ -441,6 +471,16 @@ void MainWindow::handleStatusBarTimer()
     }
 
     statusBarText->setText(txt);
+}
+
+void MainWindow::start()
+{
+    connectToDevice(serialPort->portName(), serialPort->baudRate());
+}
+
+void MainWindow::stop()
+{
+    closeSerialPort();
 }
 
 void MainWindow::handleLongTermRunModeAction()

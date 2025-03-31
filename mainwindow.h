@@ -1,17 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <cstdint>
-#include <utility>
-#include <vector>
+#include <QDBusAbstractAdaptor>
+#include <QDBusMessage>
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
 #include <QString>
 #include <QWidget>
 #include <QtSerialPort/QSerialPort>
+#include <cstdint>
 #include <cstdlib>
 #include <experimental/source_location>
+#include <utility>
+#include <vector>
 #include <zstd.h>
 
 QT_BEGIN_NAMESPACE
@@ -52,6 +54,10 @@ public:
     MainWindow& operator=(MainWindow&&) = delete;
     ~MainWindow() override;
 
+public slots:
+    Q_SCRIPTABLE void control(const QString& port, const QString& action, QString& out);
+    Q_SCRIPTABLE void portName(QString& out);
+
 private slots:
     void handleReadyRead();
     void handleError(const QSerialPort::SerialPortError error);
@@ -73,6 +79,8 @@ private slots:
     void handleStatusBarTimer();
 
 private:
+    void start();
+    void stop();
     static constexpr std::string_view DEV_PREFIX = "/dev/";
     Ui::MainWindow* ui {};
 

@@ -3,8 +3,10 @@
 #include <exception>
 
 #include <QApplication>
+#include <QDBusConnection>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QDebug>
 
 #include "mainwindow.h"
 #include "yetty.version.h"
@@ -26,6 +28,10 @@ int main(int argc, char* argv[])
     }
 
     const QApplication a(argc, argv);
+
+    if (!QDBusConnection::sessionBus().isConnected()) {
+        qWarning() << "DBUS connection error";
+    }
 
     QApplication::setOrganizationDomain(QStringLiteral("yeTTY.aa55.dev"));
     QApplication::setApplicationName(QStringLiteral(PROJECT_NAME));

@@ -16,8 +16,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Multimedia)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
 
 message("Building with Qt" ${QT_VERSION_MAJOR})
 if (NOT Qt6_FOUND)
@@ -127,6 +127,7 @@ set(PROJECT_SOURCES
         longtermrunmodedialog.h
         longtermrunmodedialog.cpp
         longtermrunmodedialog.ui
+        dbus_common.hpp
 )
 
 configure_file(yetty.version.h.in ${CMAKE_CURRENT_BINARY_DIR}/yetty.version.h @ONLY)
@@ -141,10 +142,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=logical-not-parentheses -pedanti
 -Wno-deprecated-register -Werror=return-type -Werror=uninitialized -Wstrict-aliasing=2")
 
 
+add_executable(yetty_suspend yetty_suspend.cpp)
+target_link_libraries(yetty_suspend PRIVATE Qt::DBus)
+
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia
+    Qt::DBus
     KF${QT_VERSION_MAJOR}::TextEditor
     Qt::SerialPort
     PkgConfig::libzstd)
