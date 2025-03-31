@@ -676,7 +676,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
 
     QFile file(filename);
     if (const auto result = file.open(QIODevice::WriteOnly | QIODevice::NewOnly); !result) {
-        const auto msg = QString(QStringLiteral("Failed to open: %1 %2 %3")).arg(filename).arg(static_cast<int>(result)).arg(errno);
+        const auto msg = QString(QStringLiteral("Failed to open: %1 %2")).arg(filename, file.errorString());
         qCritical() << msg;
         throw std::runtime_error(msg.toStdString());
     }
