@@ -425,6 +425,7 @@ void MainWindow::handleLongTermRunModeDialogDone(int result)
         } else {
             qInfo() << "Long term run mode disabled";
             fileCounter = 0;
+            errCtr = 0;
             longTermRunModeTimer->stop();
         }
 
@@ -455,13 +456,27 @@ void MainWindow::handleLongTermRunModeTimer()
 
         const auto utfTxt = doc->text().toUtf8();
         try {
-            writeCompressedFile(utfTxt, fileCounter++);
+            writeCompressedFile(utfTxt, fileCounter);
             handleClearAction();
+            fileCounter++;
         } catch (std::exception& e) {
             // In case of errors we don't clear the logs, hopefully in the next attempt it would work
-            doc->postMessage(new KTextEditor::Message(e.what(), KTextEditor::Message::Error)); // NOLINT(cppcoreguidelines-owning-memory)
             qCritical() << e.what();
+            errCtr++;
+
+            if (!longTermRunModeErrMsgActive) {
+                longTermRunModeErrMsgActive = true;
+                auto* msg = new KTextEditor::Message(e.what(), KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
+
+                connect(msg, &KTextEditor::Message::closed, this, [this](KTextEditor::Message*) { longTermRunModeErrMsgActive = false; });
+                doc->postMessage(msg);
+            }
         }
+
+        const QString errStr = errCtr ? (QStringLiteral(" <b>(%1 errors)</b>").arg(QString::number(errCtr))) : "";
+
+        ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (%1 files%2 saved in %3)")
+                .arg(QString::number(fileCounter), errStr, longTermRunModePath));
     }
 }
 

@@ -119,6 +119,7 @@ private:
     // Long term run mode
     std::unique_ptr<LongTermRunModeDialog> longTermRunModeDialog;
     bool longTermRunModeEnabled {};
+    bool longTermRunModeErrMsgActive {};
     qsizetype longTermRunModeMaxMemory {};
     int longTermRunModeMaxTime {};
     QString longTermRunModePath;
@@ -126,7 +127,9 @@ private:
     QTimer* longTermRunModeTimer {};
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer;
+
     int fileCounter {};
+    int errCtr {};
 
     static constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
     static constexpr auto GROUP_DIALOUT = "dialout";
