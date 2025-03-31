@@ -467,9 +467,8 @@ void MainWindow::handleLongTermRunModeTimer()
             return;
         }
         try {
-            writeCompressedFile(utfTxt, fileCounter);
+            writeCompressedFile(utfTxt);
             handleClearAction();
-            fileCounter++;
         } catch (std::exception& e) {
             // In case of errors we don't clear the logs, hopefully in the next attempt it would work
             qCritical() << e.what();
@@ -668,7 +667,7 @@ std::string MainWindow::getErrorStr()
     return errStr ? errStr : "";
 }
 
-void MainWindow::writeCompressedFile(const QByteArray& contents, const int counter)
+void MainWindow::writeCompressedFile(const QByteArray& contents)
 {
     const auto contentsLen = contents.size();
 
@@ -681,9 +680,9 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     const auto filename = QString(QStringLiteral("%1/%2_%3_%4.txt.zst"))
                               .arg(longTermRunModePath, serialPort->portName(),
                                   curDate.toString(QStringLiteral("yyyy-MM-dd-hh_mm-ss")),
-                                  (QStringLiteral("%1").arg(counter, 8, 10, QLatin1Char('0'))));
+                                  (QStringLiteral("%1").arg(fileCounter, 8, 10, QLatin1Char('0'))));
 
-    qInfo() << "Saving" << filename << contentsLen;
+    qInfo() << "Saving" << filename << contentsLen << "bytes";
 
     QFile file(filename);
     if (const auto result = file.open(QIODevice::WriteOnly | QIODevice::NewOnly); !result) {
@@ -723,6 +722,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     file.flush();
     fsync(file.handle());
     file.close();
+    fileCounter++;
 }
 
 void MainWindow::validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc)
