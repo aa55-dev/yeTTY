@@ -167,7 +167,7 @@ endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "yetty")
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} yetty_suspend
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
