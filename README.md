@@ -19,6 +19,16 @@ yeTTY is an open source application for embedded developers to view logs from se
 
     This is useful if you need to keep the board running overnight. yeTTY will capture the logs from serial port and compress it and save them to storage.
 
+5. Suspend during flashing
+
+    If your board uses the same serial port for both logs and flashing, prepend the flashing command with `yetty_suspend` to suspend yetty while the board is being flashed.
+
+    ESP32 Example:
+
+    ```
+    yetty_suspend ttyUSB0 idf.py -p /dev/ttyUSB0 flash
+    ```
+
 ## Building
 
 **1. Install dependencies**
