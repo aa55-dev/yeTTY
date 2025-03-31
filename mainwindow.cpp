@@ -413,9 +413,24 @@ void MainWindow::handleRetryConnection()
     if (!serialPort->isOpen()) {
         autoRetryCounter++;
         qInfo() << "Retrying connection";
+        const auto prevSerial = serialNumber;
+        const auto prevManufacturer = manufacturer;
+        const auto prevDescription = description;
+
         connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
 
         if (serialPort->isOpen()) {
+            if (serialNumber != prevSerial || manufacturer != prevManufacturer || description != prevDescription) {
+                stop();
+
+                const auto msg = QStringLiteral("Serial port info mismatch on %1\nBefore: %2, %3, %4\nNow: %5, %6, %7")
+                                     .arg(serialPort->portName(),
+                                         prevManufacturer, prevDescription, prevSerial,
+                                         manufacturer, description, serialNumber);
+
+                QMessageBox::critical(this, QStringLiteral("Serial port info mismatch"), msg);
+            }
+
             autoRetryTimer->stop();
             autoRetryCounter = 0;
         } else {
@@ -554,18 +569,21 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
 
     setWindowTitle(port);
 
-    const auto [manufacturer, description] = getPortInfo(port);
+    const auto [tmpManufacturer, tmpDescription, tmpSerialNumber] = getPortInfo(port);
     const QString portInfoText = port
         % " "
         % (!baud ? QString() : QStringLiteral("| ") + QString::number(baud))
-        % (manufacturer.isEmpty() ? QString() : QStringLiteral("| ") + manufacturer)
-        % (description.isEmpty() ? QString() : QStringLiteral("| ") + description);
+        % (tmpManufacturer.isEmpty() ? QString() : QStringLiteral("| ") + tmpManufacturer)
+        % (tmpDescription.isEmpty() ? QString() : QStringLiteral("| ") + tmpDescription);
 
     ui->portInfoLabel->setText(portInfoText);
 
     qInfo() << "Connecting to: " << port << baud;
     serialPort->clearError();
     if (serialPort->open(QIODevice::ReadOnly)) {
+        manufacturer = tmpManufacturer;
+        description = tmpDescription;
+        serialNumber = tmpSerialNumber;
         ui->startStopButton->setEnabled(true);
         setProgramState(ProgramState::Started);
     } else {
@@ -760,14 +778,14 @@ void MainWindow::closeSerialPort()
     setProgramState(ProgramState::Stopped);
 }
 
-std::pair<QString, QString> MainWindow::getPortInfo(QString portLocation)
+std::tuple<QString, QString, QString> MainWindow::getPortInfo(QString portLocation)
 {
     if (portLocation.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
         portLocation.remove(0, DEV_PREFIX.size());
     }
     const QSerialPortInfo portInfo(portLocation);
 
-    return { portInfo.manufacturer(), portInfo.description() };
+    return { portInfo.manufacturer(), portInfo.description(), portInfo.serialNumber() };
 }
 
 bool MainWindow::isUserPermissionSetupCorrectly()
