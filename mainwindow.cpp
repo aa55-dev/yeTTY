@@ -156,6 +156,10 @@ MainWindow::MainWindow(QWidget* parent)
     connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral("-") + QString::number(getpid())));
     connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
 
+    ui->statusTextLabel->setVisible(false);
+    ui->statusIconLabel->setVisible(false);
+    const auto size = ui->statusIconLabel->size();
+    ui->statusIconLabel->setPixmap(QIcon::fromTheme(QStringLiteral("media-record")).pixmap(QSize(size.width() / 2, size.height())));
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
 
@@ -415,11 +419,16 @@ void MainWindow::handleLongTermRunModeDialogDone(int result)
             longTermRunModePath = longTermRunModeDialog->getDirectory().path();
 
             qInfo() << "Long term run mode enabled:" << longTermRunModeMaxMemory << longTermRunModeMaxTime << longTermRunModePath;
+            ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (location: %1)")
+                    .arg(longTermRunModePath));
         } else {
             qInfo() << "Long term run mode disabled";
             fileCounter = 0;
             longTermRunModeTimer->stop();
         }
+
+        ui->statusIconLabel->setVisible(longTermRunModeEnabled);
+        ui->statusTextLabel->setVisible(longTermRunModeEnabled);
     }
 }
 
