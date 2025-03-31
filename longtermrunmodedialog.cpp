@@ -6,10 +6,12 @@
 #include <QFileDialog>
 #include <QFontMetrics>
 #include <QIntValidator>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QStandardPaths>
 #include <QStringLiteral>
 #include <QToolButton>
+#include <QUuid>
 #include <QWidget>
 
 LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
@@ -72,6 +74,7 @@ void LongTermRunModeDialog::onInputChanged()
 
     timeInMinutes = ui->timeLineEdit->text().toInt(&timeOk);
     memoryInMiB = ui->memoryLineEdit->text().toInt(&memoryOk);
+    directory = ui->directoryLineEdit->text();
 
     if (!timeOk || !memoryOk || ui->directoryLineEdit->text().isEmpty()) {
         ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
@@ -86,10 +89,43 @@ void LongTermRunModeDialog::onInputChanged()
 
 void LongTermRunModeDialog::onToolButton()
 {
-    directory = QFileDialog::getExistingDirectory();
-    if (!directory.isEmpty()) {
+    const auto tmp = QFileDialog::getExistingDirectory();
+    if (!tmp.isEmpty()) {
+        directory = tmp;
         qInfo() << "New directory to save files" << directory;
         ui->directoryLineEdit->setText(directory.toString());
+    }
+}
+
+std::pair<bool, QString> LongTermRunModeDialog::isDirectoryWritable(const QString& directory)
+{
+    const QUuid uid = QUuid::createUuid();
+    const auto filename = QStringLiteral("/.yetty-test-") + uid.toString(QUuid::StringFormat::Id128);
+
+    QFile testFile(directory + filename);
+
+    if (testFile.open(QIODeviceBase::WriteOnly)) {
+
+        const auto result = testFile.write("Hello") > 0;
+        const auto errMsg = testFile.errorString();
+
+        testFile.close();
+        testFile.remove();
+
+        return { result, errMsg };
+    }
+
+    return { false, testFile.errorString() };
+}
+
+void LongTermRunModeDialog::accept()
+{
+    const auto [result, errStr] = isDirectoryWritable(directory.path());
+    if (result) {
+        QDialog::accept();
+    } else {
+        QMessageBox::warning(this, QStringLiteral("Write error"),
+            QStringLiteral("Failed to write to %1: %2").arg(directory.path(), errStr), QMessageBox::Ok);
     }
 }
 

@@ -34,6 +34,12 @@ private:
     int timeInMinutes = 15;
     int memoryInMiB = 8;
     QUrl directory;
+
+    [[nodiscard]] static std::pair<bool, QString> isDirectoryWritable(const QString &directory);
+
+    // QDialog interface
+public slots:
+    void accept() override;
 };
 
 #endif // LONGTERMRUNMODEDIALOG_H
