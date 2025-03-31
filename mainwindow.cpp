@@ -476,7 +476,7 @@ void MainWindow::handleLongTermRunModeTimer()
             }
         }
 
-        const QString errStr = errCtr ? (QStringLiteral(" <b>(%1 errors)</b>").arg(QString::number(errCtr))) : "";
+        const QString errStr = errCtr ? (QStringLiteral(" <b>(%1 errors)</b>").arg(QString::number(errCtr))) : QLatin1String("");
 
         ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (%1 files%2 saved in %3)")
                 .arg(QString::number(fileCounter), errStr, longTermRunModePath));
@@ -672,7 +672,7 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
     const auto curDate = QDateTime::currentDateTime();
     const auto filename = QString(QStringLiteral("%1/%2_%3_%4.txt.zst"))
                               .arg(longTermRunModePath, serialPort->portName(),
-                                  curDate.toString("yyyy-MM-dd-hh_mm-ss"),
+                                  curDate.toString(QStringLiteral("yyyy-MM-dd-hh_mm-ss")),
                                   (QStringLiteral("%1").arg(counter, 8, 10, QLatin1Char('0'))));
 
     qInfo() << "Saving" << filename << contentsLen;
