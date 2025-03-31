@@ -408,8 +408,7 @@ void MainWindow::handleStartStopButton()
 
 void MainWindow::handleRetryConnection()
 {
-    // This can end up opening the wrong port if the user is plugging in multiple serial devices
-    // and a new device enumerates to the same name as the old one.
+
     if (!serialPort->isOpen()) {
         autoRetryCounter++;
         qInfo() << "Retrying connection";
@@ -420,6 +419,7 @@ void MainWindow::handleRetryConnection()
         connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
 
         if (serialPort->isOpen()) {
+            // This can happen if the user plugged in a new serial device.
             if (serialNumber != prevSerial || manufacturer != prevManufacturer || description != prevDescription) {
                 stop();
 
