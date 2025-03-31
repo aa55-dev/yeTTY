@@ -322,9 +322,9 @@ void MainWindow::handleSaveAction()
     doc->documentSave();
 }
 
-void MainWindow::handleClearAction()
+void MainWindow::handleClearAction(const bool force)
 {
-    if (longTermRunModeEnabled) {
+    if (longTermRunModeEnabled && !force) {
         QMessageBox::critical(this, "Long term run mode active", "Long term run mode is active, please disable it before attempting to clear text");
         return;
     }
@@ -468,7 +468,7 @@ void MainWindow::handleLongTermRunModeTimer()
         }
         try {
             writeCompressedFile(utfTxt);
-            handleClearAction();
+            handleClearAction(true);
         } catch (std::exception& e) {
             // In case of errors we don't clear the logs, hopefully in the next attempt it would work
             qCritical() << e.what();

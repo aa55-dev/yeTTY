@@ -63,7 +63,7 @@ private slots:
     void handleError(const QSerialPort::SerialPortError error);
 
     void handleSaveAction();
-    void handleClearAction();
+    void handleClearAction(const bool force = false);
     static void handleQuitAction();
     void handleScrollToEnd();
     void handleAboutAction();
