@@ -456,11 +456,12 @@ void MainWindow::handleLongTermRunModeTimer()
         const auto utfTxt = doc->text().toUtf8();
         try {
             writeCompressedFile(utfTxt, fileCounter++);
+            handleClearAction();
         } catch (std::exception& e) {
-            qCritical() << "Exception in writing file: " << e.what();
+            // In case of errors we don't clear the logs, hopefully in the next attempt it would work
+            doc->postMessage(new KTextEditor::Message(e.what(), KTextEditor::Message::Error)); // NOLINT(cppcoreguidelines-owning-memory)
+            qCritical() << e.what();
         }
-
-        handleClearAction();
     }
 }
 
