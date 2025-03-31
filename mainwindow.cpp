@@ -152,8 +152,9 @@ MainWindow::MainWindow(QWidget* parent)
 
     QDBusConnection connection = QDBusConnection::sessionBus();
 
-    connection.registerService(DBUS_SERVICE_NAME + ("-" + QString::number(getpid())));
-    connection.registerObject("/", DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
+    // NOLINTNEXTLINE(-Wclazy-qstring-allocations)
+    connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral("-") + QString::number(getpid())));
+    connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
@@ -165,6 +166,7 @@ MainWindow::~MainWindow()
     zstdCtx = nullptr;
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void MainWindow::control(const QString& port, const QString& action, QString& out)
 {
     if (port != serialPort->portName()) {

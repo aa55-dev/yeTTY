@@ -30,13 +30,13 @@ static void printUsage()
 
 [[nodiscard]] static int stop(QDBusInterface& dbusIface, const QString& portName)
 {
-    const QDBusReply<QString> reply = dbusIface.call("control", portName, DBUS_STOP);
+    const QDBusReply<QString> reply = dbusIface.call(QStringLiteral("control"), portName, DBUS_STOP);
     return handleReply(reply);
 }
 
 [[nodiscard]] static int start(QDBusInterface& dbusIface, const QString& portName)
 {
-    const QDBusReply<QString> reply = dbusIface.call("control", portName, DBUS_START);
+    const QDBusReply<QString> reply = dbusIface.call(QStringLiteral("control"), portName, DBUS_START);
     return handleReply(reply);
 }
 
@@ -52,8 +52,8 @@ static void printUsage()
     const auto serviceNameList = result.value().filter(exp);
 
     for (const auto& serviceName : serviceNameList) {
-        QDBusInterface dbusIface(serviceName, "/", DBUS_INTERFACE_NAME);
-        const QDBusReply<QString> reply = dbusIface.call("portName");
+        QDBusInterface dbusIface(serviceName, QStringLiteral("/"), DBUS_INTERFACE_NAME);
+        const QDBusReply<QString> reply = dbusIface.call(QStringLiteral("portName"));
 
         if (reply.value() == portName) {
             return serviceName;
@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     QString portName = argv[1];
 
     static constexpr const std::string_view DEV_PREFIX = "/dev/";
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     if (portName.startsWith(QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()))) {
         portName.remove(0, DEV_PREFIX.size());
     }
-    if (!portName.startsWith("tty")) {
+    if (!portName.startsWith(QStringLiteral("tty"))) {
         printUsage();
         return -1;
     }
@@ -98,7 +99,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    QDBusInterface dbusIface(serviceName, "/", DBUS_INTERFACE_NAME);
+    QDBusInterface dbusIface(serviceName, QStringLiteral("/"), DBUS_INTERFACE_NAME);
     if (!dbusIface.isValid()) {
         const auto err = connection.lastError();
         qCritical() << (QStringLiteral("connection error: %1")
@@ -111,9 +112,11 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     const QString program = argv[2];
     QStringList argList;
     for (int i = 3; i < argc; i++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         argList << argv[i];
     }
 

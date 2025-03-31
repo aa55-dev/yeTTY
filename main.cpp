@@ -5,8 +5,8 @@
 #include <QApplication>
 #include <QDBusConnection>
 #include <QDateTime>
-#include <QMessageBox>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "mainwindow.h"
 #include "yetty.version.h"
