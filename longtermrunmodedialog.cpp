@@ -22,7 +22,7 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     if (dirs.empty()) {
         qFatal("Failed to get dir location");
     }
-    directory = dirs[0];
+    directory = dirs.at(0);
     const auto directoryStr = directory.toString();
 
     ui->timeLineEdit->setText(QString::number(timeInMinutes));
