@@ -363,10 +363,13 @@ void MainWindow::handleConnectAction()
     }
     stop();
     autoRetryTimer->stop();
-    const auto [location, baud] = getPortFromUser();
-    handleClearAction();
-
-    connectToDevice(location, baud);
+    try {
+        const auto [location, baud] = getPortFromUser();
+        handleClearAction();
+        connectToDevice(location, baud);
+    } catch (std::runtime_error& e) {
+        QMessageBox::critical(this, "Error", e.what());
+    }
 }
 
 void MainWindow::handleTriggerSetupAction()
