@@ -165,6 +165,7 @@ else()
   message("Building without systemd inhibit")
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "yetty")
 
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
