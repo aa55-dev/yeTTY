@@ -36,7 +36,8 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
 
     connect(ui->timeLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
     connect(ui->memoryLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
-    connect(ui->toolButton, &QToolButton::pressed, this, &LongTermRunModeDialog::onToolButton);
+    connect(ui->directoryLineEdit, &QLineEdit::textChanged, this, &LongTermRunModeDialog::onInputChanged);
+    connect(ui->toolButton, &QToolButton::clicked, this, &LongTermRunModeDialog::onToolButton);
 
     ui->memoryLineEdit->setValidator(new QIntValidator(1, 512, this)); // NOLINT(cppcoreguidelines-owning-memory)
     ui->timeLineEdit->setValidator(new QIntValidator(1, 60, this)); // NOLINT(cppcoreguidelines-owning-memory)
@@ -72,7 +73,7 @@ void LongTermRunModeDialog::onInputChanged()
     timeInMinutes = ui->timeLineEdit->text().toInt(&timeOk);
     memoryInMiB = ui->memoryLineEdit->text().toInt(&memoryOk);
 
-    if (!timeOk || !memoryOk) {
+    if (!timeOk || !memoryOk || ui->directoryLineEdit->text().isEmpty()) {
         ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
         return;
     }
@@ -86,8 +87,10 @@ void LongTermRunModeDialog::onInputChanged()
 void LongTermRunModeDialog::onToolButton()
 {
     directory = QFileDialog::getExistingDirectory();
-    qInfo() << "New directory to save files" << directory;
-    ui->directoryLineEdit->setText(directory.toString());
+    if (!directory.isEmpty()) {
+        qInfo() << "New directory to save files" << directory;
+        ui->directoryLineEdit->setText(directory.toString());
+    }
 }
 
 QUrl LongTermRunModeDialog::getDirectory() const
