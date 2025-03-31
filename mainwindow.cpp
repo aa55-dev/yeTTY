@@ -651,12 +651,10 @@ void MainWindow::writeCompressedFile(const QByteArray& contents, const int count
         return;
     }
 
-    // In case this function gets called multiple times rapidly, the `currentDateTime()` function
-    // will return the same value and therefore we will attempt to use the same filename more than
-    // once. In order to prevent this we prepend the filename with an incrementing counter.
-    const auto filename = QString(QStringLiteral("%1/%2_%3.txt.zst"))
-                              .arg(longTermRunModePath,
-                                  QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate),
+    const auto curDate = QDateTime::currentDateTime();
+    const auto filename = QString(QStringLiteral("%1/%2_%3_%4.txt.zst"))
+                              .arg(longTermRunModePath, serialPort->portName(),
+                                  curDate.toString("yyyy-MM-dd-hh_mm-ss"),
                                   (QStringLiteral("%1").arg(counter, 8, 10, QLatin1Char('0'))));
 
     qInfo() << "Saving" << filename << contentsLen;
