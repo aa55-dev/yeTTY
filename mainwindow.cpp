@@ -418,6 +418,7 @@ void MainWindow::handleLongTermRunModeDialogDone(int result)
             longTermRunModeStartTime = elapsedTimer.elapsed();
             longTermRunModePath = longTermRunModeDialog->getDirectory().path();
 
+            Q_ASSERT(!longTermRunModePath.isEmpty());
             qInfo() << "Long term run mode enabled:" << longTermRunModeMaxMemory << longTermRunModeMaxTime << longTermRunModePath;
             ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (location: %1)")
                     .arg(longTermRunModePath));
@@ -449,7 +450,6 @@ void MainWindow::handleLongTermRunModeTimer()
     }
 
     if (shouldSave) {
-        Q_ASSERT(!longTermRunModePath.isEmpty());
 
         longTermRunModeStartTime = elapsedTimer.elapsed();
 
