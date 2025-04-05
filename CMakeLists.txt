@@ -18,6 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
+find_package(Boost COMPONENTS stacktrace_backtrace stacktrace_addr2line REQUIRED)
 
 message("Building with Qt" ${QT_VERSION_MAJOR})
 if (NOT Qt6_FOUND)
@@ -74,6 +75,8 @@ if (ENABLE_CLANG_TIDY)
         -cppcoreguidelines-pro-type-vararg,\
         -hicpp-vararg,\
         -altera-struct-pack-align,\
+        -hicpp-named-parameter,\
+        -readability-named-parameter,\
         -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.;--exclude-header-filter=ui_\*")
 endif()
 
@@ -171,7 +174,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::DBus
     KF${QT_VERSION_MAJOR}::TextEditor
     Qt::SerialPort
-    PkgConfig::libzstd)
+    PkgConfig::libzstd
+    ${Boost_LIBRARIES})
 
 # systemd inhibit to prevent system from going to sleep while program is active
 option(USE_SYSTEMD_INHIBIT "Use systemd-inhibit" ON)

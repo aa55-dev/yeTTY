@@ -1,6 +1,12 @@
+#define BOOST_STACKTRACE_USE_BACKTRACE
+#define BOOST_STACKTRACE_USE_ADDR2LINE
+#include <boost/stacktrace.hpp>
+
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 
 #include <QApplication>
 #include <QDBusConnection>
@@ -19,8 +25,18 @@ static void printUsage()
         stderr);
 }
 
+extern "C" void signal_handler(int);
+extern "C" void signal_handler(int)
+{
+    std::cerr << boost::stacktrace::stacktrace();
+    exit(-1); // NOLINT(concurrency-mt-unsafe)
+}
+
 int main(int argc, char* argv[])
 {
+    ::signal(SIGSEGV, &signal_handler); // NOLINT(cert-err33-c)
+    ::signal(SIGABRT, &signal_handler); // NOLINT(cert-err33-c)
+
     if (argc > 3) {
         printUsage();
         // NOLINTNEXTLINE(concurrency-mt-unsafe)
