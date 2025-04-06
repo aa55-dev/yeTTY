@@ -309,8 +309,8 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     statusBarText->setText(errMsg);
 
     if (!serialPortErrMsgActive) {
-        serialPortErrMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error);
-        doc->postMessage(serialPortErrMsg); // NOLINT(cppcoreguidelines-owning-memory)
+        serialPortErrMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
+        doc->postMessage(serialPortErrMsg);
         serialPortErrMsgActive = true;
     }
 
@@ -454,7 +454,7 @@ void MainWindow::handleRetryConnection()
                 QMessageBox::critical(this, QStringLiteral("Serial port info mismatch"), msg);
             }
 
-            auto msg = new KTextEditor::Message(QStringLiteral("Reconnected to port"), KTextEditor::Message::Positive);
+            auto* msg = new KTextEditor::Message(QStringLiteral("Reconnected to port"), KTextEditor::Message::Positive);
             msg->setAutoHide(2000);
             doc->postMessage(msg);
             stopAutoRetryTimer();
