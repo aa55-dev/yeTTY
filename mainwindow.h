@@ -90,9 +90,6 @@ private:
     KTextEditor::Document* doc {};
     KTextEditor::View* view {};
 
-    QSerialPort::SerialPortError prevErrCode = QSerialPort::SerialPortError::NoError;
-    QString prevErrMsg;
-
     void setProgramState(const ProgramState newState);
     [[nodiscard]] static std::pair<QString, int> getPortFromUser();
 
@@ -133,6 +130,8 @@ private:
     QTimer* longTermRunModeTimer {};
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer;
+    bool serialPortErrMsgActive {};
+    KTextEditor::Message* serialPortErrMsg {};
 
     int fileCounter {};
     int errCtr {};

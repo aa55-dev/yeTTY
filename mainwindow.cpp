@@ -308,16 +308,12 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     qCritical() << "Serial port error: " << error;
     statusBarText->setText(errMsg);
 
-    // When USB is disconnected we get a QSerialPort::ResourceError and then a QSerialPort::DeviceNotFoundError when our retry timer
-    // tries to reconnect to the port. If the user has dismissed the first error message we should not show the second error message
-    const auto duplicateError = (error == QSerialPort::DeviceNotFoundError && prevErrCode == QSerialPort::ResourceError);
-
-    if (prevErrMsg != errMsg && !duplicateError) {
-        doc->postMessage(new KTextEditor::Message(errMsg, KTextEditor::Message::Error)); // NOLINT(cppcoreguidelines-owning-memory)
+    if (!serialPortErrMsgActive) {
+        serialPortErrMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error);
+        doc->postMessage(serialPortErrMsg); // NOLINT(cppcoreguidelines-owning-memory)
+        serialPortErrMsgActive = true;
     }
 
-    prevErrMsg = errMsg;
-    prevErrCode = error;
     setProgramState(ProgramState::Stopped);
 
     if (!autoRetryTimer->isActive()) {
@@ -420,6 +416,12 @@ void MainWindow::stopAutoRetryTimer()
     ui->autoRetryCancelButton->setVisible(false);
     ui->autoRetryTextLabel->setVisible(false);
     autoRetryTimer->stop();
+    if (serialPortErrMsgActive) {
+        serialPortErrMsgActive = false;
+        if (serialPortErrMsg) {
+            serialPortErrMsg->deleteLater();
+        }
+    }
     autoRetryCounter = 0;
 }
 
@@ -452,6 +454,9 @@ void MainWindow::handleRetryConnection()
                 QMessageBox::critical(this, QStringLiteral("Serial port info mismatch"), msg);
             }
 
+            auto msg = new KTextEditor::Message(QStringLiteral("Reconnected to port"), KTextEditor::Message::Positive);
+            msg->setAutoHide(2000);
+            doc->postMessage(msg);
             stopAutoRetryTimer();
         } else {
             statusBarText->setText(QStringLiteral("Auto reconnect attempts: %1").arg(autoRetryCounter));
