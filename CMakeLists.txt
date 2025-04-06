@@ -81,6 +81,7 @@ if (ENABLE_CLANG_TIDY)
 endif()
 
 add_compile_options($<$<CONFIG:Release>:-Wunused>)
+add_compile_options($<$<CONFIG:Debug>:-Wno-unused>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-pedantic>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror=logical-not-parentheses>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall>)
