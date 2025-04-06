@@ -46,9 +46,13 @@ int main(int argc, char* argv[])
         try {
             baud = std::stoi(argv[2]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         } catch (std::exception& e) {
-            qInfo() << "Failed to parse baud: " << e.what();
+            qCritical() << "Failed to parse baud: " << e.what();
         }
         if (portLocation.isEmpty() || !baud) {
+            printUsageAndExit();
+        }
+        if (!portLocation.startsWith(QStringLiteral("/dev/"))) {
+            qCritical() << "port name is invalid: " << portLocation;
             printUsageAndExit();
         }
     }
