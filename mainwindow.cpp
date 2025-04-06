@@ -411,14 +411,14 @@ void MainWindow::handleStartStopButton()
     }
 }
 
-void MainWindow::stopAutoRetryTimer()
+void MainWindow::stopAutoRetryTimer(const bool deleteMsg)
 {
     ui->autoRetryCancelButton->setVisible(false);
     ui->autoRetryTextLabel->setVisible(false);
     autoRetryTimer->stop();
     if (serialPortErrMsgActive) {
         serialPortErrMsgActive = false;
-        if (serialPortErrMsg) {
+        if (serialPortErrMsg && deleteMsg) {
             serialPortErrMsg->deleteLater();
         }
     }
@@ -569,7 +569,7 @@ void MainWindow::handleStatusBarTimer()
 
 void MainWindow::handleCancelAutoRetry()
 {
-    stopAutoRetryTimer();
+    stopAutoRetryTimer(false);
     statusBarText->setText(QStringLiteral("Port disconnected, auto retry cancelled"));
 }
 

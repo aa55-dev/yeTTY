@@ -82,7 +82,7 @@ private slots:
 private:
     void start();
     void stop();
-    void stopAutoRetryTimer();
+    void stopAutoRetryTimer(const bool deleteMsg = true);
     static constexpr std::string_view DEV_PREFIX = "/dev/";
     Ui::MainWindow* ui {};
 
