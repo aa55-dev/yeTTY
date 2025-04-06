@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
 
     QApplication::setOrganizationDomain(QStringLiteral("yeTTY.aa55.dev"));
     QApplication::setApplicationName(QStringLiteral(PROJECT_NAME));
+    // This will append the application name to the window title
+    QApplication::setApplicationDisplayName(QStringLiteral(PROJECT_NAME));
     // This sets the icon in wayland
     QApplication::setDesktopFileName(QStringLiteral(PROJECT_DOMAIN));
     // This is needed to show the icon in the "About" window

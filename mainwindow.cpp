@@ -91,8 +91,6 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
 
     ui->verticalLayout->insertWidget(0, view);
 
-    setWindowTitle(QStringLiteral(PROJECT_NAME));
-
     connectToDevice(portLocation, baud);
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
