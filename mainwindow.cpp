@@ -55,8 +55,8 @@
 #include <systemd/sd-bus.h>
 #endif
 
-MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent)
+MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
+    : QMainWindow(nullptr)
     , ui(new Ui::MainWindow)
     , fsWatcher(new QFileSystemWatcher(this))
     , serialPort(new QSerialPort(this))
@@ -66,32 +66,17 @@ MainWindow::MainWindow(QWidget* parent)
     , statusBarText(new QLabel(this))
     , longTermRunModeTimer(new QTimer(this))
 {
-
-    const auto args = QApplication::arguments();
-
     QString portLocation;
     int baud {};
 
-    switch (args.size()) {
-
-    case 3: { // Port and baud in cmdline arg
-        bool ok {};
-        baud = args[2].toInt(&ok);
-        if (!ok || !baud) {
-            throw std::runtime_error("Invalid baud: " + args[2].toStdString());
-        }
-
-        [[fallthrough]];
-    }
-    case 2: // Filename in cmdline arg
-        portLocation = args[1];
-        {
-        }
-        break;
-
-    default: // No args, show msgbox and get it from user
+    if (portParams.has_value()) {
+        std::tie(portLocation, baud) = portParams.value();
+    } else {
         std::tie(portLocation, baud) = getPortFromUser();
     }
+
+    Q_ASSERT(!portLocation.isEmpty());
+    Q_ASSERT(baud > 0);
 
     elapsedTimer.start();
     ui->setupUi(this);
@@ -633,17 +618,9 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
                 [this, port, baud, showMsgOnOpenErr]() { connectToDevice(port, baud, showMsgOnOpenErr); });
         }
     } else {
-
-        // We allow the user to open non-serial, static plain text files.
-        QFile file(port);
-
-        if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
-            QMessageBox::warning(this,
-                tr("Failed to open file"),
-                tr("Failed to open file") % QStringLiteral(": ") % port % ' ' % QString::fromStdString(getErrorStr()));
-        } else {
-            doc->setText(file.readAll());
-        }
+        // Handle unknown error
+        static constexpr const char* ERR_MSG = "Failed to open serial port";
+        QMessageBox::warning(this, ERR_MSG, ERR_MSG % QStringLiteral(" %1: ").arg(port) % QString::fromStdString(getErrorStr()));
     }
     ui->startStopButton->setEnabled(false);
 }

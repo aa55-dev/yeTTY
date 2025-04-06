@@ -17,12 +17,11 @@
 #include "mainwindow.h"
 #include "yetty.version.h"
 
-static void printUsage()
+static void printUsageAndExit()
 {
     // NOLINTNEXTLINE(cert-err33-c)
-    fputs("Usage: " PROJECT_NAME " PORTNAME BAUDRATE\n"
-          "       " PROJECT_NAME " FILENAME",
-        stderr);
+    fputs("Usage: " PROJECT_NAME " PORTNAME BAUDRATE\n", stderr);
+    exit(EXIT_FAILURE); // NOLINT(concurrency-mt-unsafe)
 }
 
 extern "C" void signal_handler(int);
@@ -37,10 +36,21 @@ int main(int argc, char* argv[])
     ::signal(SIGSEGV, &signal_handler); // NOLINT(cert-err33-c)
     ::signal(SIGABRT, &signal_handler); // NOLINT(cert-err33-c)
 
-    if (argc > 3) {
-        printUsage();
-        // NOLINTNEXTLINE(concurrency-mt-unsafe)
-        exit(EXIT_FAILURE);
+    if (argc != 1 && argc != 3) {
+        printUsageAndExit();
+    }
+    QString portLocation;
+    int baud {};
+    if (argc == 3) {
+        portLocation = argv[1]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        try {
+            baud = std::stoi(argv[2]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        } catch (std::exception& e) {
+            qInfo() << "Failed to parse baud: " << e.what();
+        }
+        if (portLocation.isEmpty() || !baud) {
+            printUsageAndExit();
+        }
     }
 
     const QApplication a(argc, argv);
@@ -57,7 +67,7 @@ int main(int argc, char* argv[])
     QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(PROJECT_DOMAIN)));
 
     try {
-        MainWindow w;
+        MainWindow w(argc == 3 ? std::optional<std::pair<QString, int>> { std::in_place, portLocation, baud } : std::nullopt);
         w.show();
         return QApplication::exec();
     } catch (std::exception& e) {
