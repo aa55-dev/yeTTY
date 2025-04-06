@@ -2,6 +2,10 @@
 ![screenshot](img/screenshot1.png "screenshot")
 yeTTY is an open source application for embedded developers to view logs from serial port.
 
+## Download
+
+Source code is available on [https://github.com/aa55-dev/yeTTY/](https://github.com/aa55-dev/yeTTY/)
+
 ## Features
 1. Text highlighting
 
