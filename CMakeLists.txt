@@ -168,7 +168,8 @@ add_executable(${PROJECT_NAME}
     longtermrunmodedialog.cpp
     longtermrunmodedialog.ui
     dbus_common.hpp
-    common.hpp)
+    common.hpp
+    portalreadyinusedialog.h portalreadyinusedialog.cpp portalreadyinusedialog.ui)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia

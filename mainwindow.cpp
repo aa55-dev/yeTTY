@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "dbus_common.hpp"
 #include "longtermrunmodedialog.h"
+#include "portalreadyinusedialog.h"
 #include "portselectiondialog.h"
 #include "triggersetupdialog.h"
 #include "yetty.version.h"
@@ -30,6 +31,7 @@
 #include <QDBusConnection>
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QEvent>
 #include <QFile>
 #include <QFileSystemWatcher>
@@ -610,57 +612,99 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
 
     qInfo() << "Connecting to: " << port << baud;
     serialPort->clearError();
+
     if (serialPort->open(QIODevice::ReadOnly)) {
         manufacturer = tmpManufacturer;
         description = tmpDescription;
         serialNumber = tmpSerialNumber;
         ui->startStopButton->setEnabled(true);
         setProgramState(ProgramState::Started);
-    } else {
-        if (errno == EACCES) {
+        return;
+    }
 
-            bool isPermSetupCorrect = true;
-
-            try {
-                isPermSetupCorrect = isUserPermissionSetupCorrectly();
-            } catch (std::runtime_error& e) {
-                qCritical() << "Exception in permission check: " << e.what();
-            }
-
-            if (!isPermSetupCorrect) {
-                auto username = qEnvironmentVariable("USER");
-                if (username.isEmpty()) {
-                    username = QStringLiteral("YOUR_USERNAME");
-                }
-                QMessageBox::critical(this, tr("Permission denied"),
-                    tr("Permission denied when attempting to open ") % port % tr(". Add the current user to the dialout group by running the command given below and restart your system.\n\n")
-                        % "sudo usermod -a -G dialout " % username);
-                return;
-            }
-
-            // This can happen if the user added the account to the dialout group but hasn't restarted the system yet.
-
-            // but it can be falsely triggered if the USB was just plugged in when we tried to open it.
-            if (!isRecentlyEnumerated()) {
-
-                qWarning() << "Permission denied, possibly not restarted";
-                QMessageBox::critical(this, tr("Permission denied"),
-                    tr("Permission denied when attempting to open ") % port % tr(".\nHave you restarted the system after adding the present user to dialout group?"));
-                return;
-            }
-            qWarning() << "Permission denied, possibly just enumerated";
+    if (errno == EACCES) {
+        // Handle permission errors
+        handlePortAccessError(port);
+    } else if (errno == EBUSY) {
+        // Handle port already in use by another process
+        const auto result = handlePortBusy(port);
+        if (result) {
+            QTimer::singleShot(0, Qt::PreciseTimer, this,
+                [this, port, baud, showMsgOnOpenErr]() { connectToDevice(port, baud, showMsgOnOpenErr); });
         }
+    } else {
 
         // We allow the user to open non-serial, static plain text files.
         QFile file(port);
+
         if (!file.open(QIODevice::ReadOnly) && showMsgOnOpenErr) {
             QMessageBox::warning(this,
                 tr("Failed to open file"),
                 tr("Failed to open file") % QStringLiteral(": ") % port % ' ' % QString::fromStdString(getErrorStr()));
+        } else {
+            doc->setText(file.readAll());
         }
-        doc->setText(file.readAll());
-        ui->startStopButton->setEnabled(false);
     }
+    ui->startStopButton->setEnabled(false);
+}
+
+std::tuple<QString, QString> MainWindow::findProcessUsingPort(const QString& portName)
+{
+    static constexpr const char* PROC = "/proc/";
+
+    const QDir procDir(PROC);
+    const auto procList = procDir.entryList(QDir::Dirs | QDir::Filter::NoDotAndDotDot);
+
+    for (const auto& pid : procList) {
+        bool ok {};
+        pid.toInt(&ok);
+        if (!ok) {
+            continue;
+        }
+
+        const QString fdDirPath = PROC % pid % "/fd/";
+        const QDir fdDir(fdDirPath);
+
+        const auto fdList = fdDir.entryList(QDir::Filter::NoDotAndDotDot);
+        if (fdList.empty()) {
+            continue;
+        }
+
+        for (const auto& fileDescriptor : fdList) {
+            const QString fullPath = fdDirPath + fileDescriptor;
+
+            std::array<char, 64> filePath {};
+            const auto result = readlink(fullPath.toLocal8Bit(), filePath.data(), filePath.size() - 1);
+            if (result < 0 || result == filePath.size() - 1) {
+                continue;
+            }
+            if (filePath.data() != portName) {
+                continue;
+            }
+
+            QFile command(PROC % pid % "/cmdline");
+            if (!command.open(QIODevice::ReadOnly)) {
+                continue;
+            }
+
+            const auto fileContents = QString::fromUtf8(command.readAll());
+            if (fileContents.isEmpty()) {
+                continue;
+            }
+
+            auto argsList = fileContents.split('\0');
+
+            if (argsList.isEmpty()) {
+                continue;
+            }
+
+            argsList.replace(0, argsList.at(0).toLower());
+
+            return { pid, argsList.join(" ").trimmed() };
+        }
+    }
+
+    return {};
 }
 
 #ifdef SYSTEMD_AVAILABLE
@@ -894,4 +938,74 @@ bool MainWindow::isRecentlyEnumerated()
     }
 
     return time(nullptr) - fileStat.stx_btime.tv_sec < 3;
+}
+
+bool MainWindow::handlePortBusy(const QString& port)
+{
+    const auto [pid, command] = findProcessUsingPort(port);
+
+    qInfo() << pid << command;
+    if (pid.isEmpty() || command.isEmpty()) {
+        // The port is probably in use by another user
+        QMessageBox::critical(this, "Failed to open port", "Port is already in use by another process");
+        return false;
+    }
+    auto* const dlg = new PortAlreadyInUseDialog(this, pid, command); // NOLINT(cppcoreguidelines-owning-memory)
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+
+    if (dlg->exec() != QDialog::Accepted) {
+        return false;
+    }
+
+    const auto [pidNow, commandNow] = findProcessUsingPort(port);
+    if (pidNow != pid || commandNow != command) {
+        qWarning() << "process mismatch" << pid << pidNow << command << commandNow;
+        return false;
+    }
+    bool ok {};
+    const auto pidInt = pidNow.toInt(&ok, 10);
+    if (!ok || pidInt <= 1) {
+        qWarning() << "Failed to convert PID" << pidNow;
+        return false;
+    }
+    qInfo() << "Killing " << pidInt;
+    if (kill(pidInt, SIGTERM) < 0) {
+        qWarning() << "Failed to kill" << errno;
+        return false;
+    }
+
+    return true;
+}
+
+void MainWindow::handlePortAccessError(const QString& port)
+{
+    bool isPermSetupCorrect = true;
+
+    try {
+        isPermSetupCorrect = isUserPermissionSetupCorrectly();
+    } catch (std::runtime_error& e) {
+        qCritical() << "Exception in permission check: " << e.what();
+    }
+
+    if (!isPermSetupCorrect) {
+        auto username = qEnvironmentVariable("USER");
+        if (username.isEmpty()) {
+            username = QStringLiteral("YOUR_USERNAME");
+        }
+        QMessageBox::critical(this, tr("Permission denied"),
+            tr("Permission denied when attempting to open ") % port % tr(". Add the current user to the dialout group by "
+                                                                         "running the command given below and restart your system.\n\n")
+                % "sudo usermod -a -G dialout " % username);
+        return;
+    }
+
+    // This can happen if the user added the account to the dialout group but hasn't restarted the system yet
+    // but it can be falsely triggered if the USB was just plugged in when we tried to open it.
+    if (!isRecentlyEnumerated()) {
+        qWarning() << "Permission denied, possibly not restarted";
+        QMessageBox::critical(this, tr("Permission denied"),
+            tr("Permission denied when attempting to open ") % port % tr(".\nHave you restarted the system after adding the present user to dialout group?"));
+        return;
+    }
+    qWarning() << "Permission denied, possibly just enumerated";
 }

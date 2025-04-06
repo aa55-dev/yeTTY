@@ -139,6 +139,9 @@ private:
     static constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
     static constexpr auto GROUP_DIALOUT = "dialout";
 
+    // Find out which process is currently using a serial port
+    static std::tuple<QString, QString> findProcessUsingPort(const QString& portName);
+
 #ifdef SYSTEMD_AVAILABLE
     int inhibitFd {};
     void setInhibit(const bool enabled);
@@ -153,5 +156,7 @@ private:
     // Checks if the user is in "dialout" group
     [[nodiscard]] static bool isUserPermissionSetupCorrectly();
     [[nodiscard]] bool isRecentlyEnumerated();
+    bool handlePortBusy(const QString& port);
+    void handlePortAccessError(const QString& port);
 };
 #endif // MAINWINDOW_H
