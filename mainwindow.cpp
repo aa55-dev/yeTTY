@@ -158,10 +158,15 @@ MainWindow::MainWindow(QWidget* parent)
     connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral("-") + QString::number(getpid())));
     connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
 
-    ui->statusTextLabel->setVisible(false);
-    ui->statusIconLabel->setVisible(false);
-    const auto size = ui->statusIconLabel->size();
-    ui->statusIconLabel->setPixmap(QIcon::fromTheme(QStringLiteral("media-record")).pixmap(QSize(size.width() / 2, size.height())));
+    ui->LTRTextLabel->setVisible(false);
+    ui->LTRIconLabel->setVisible(false);
+    const auto size = ui->LTRIconLabel->size();
+    ui->LTRIconLabel->setPixmap(QIcon::fromTheme(QStringLiteral("media-record")).pixmap(QSize(size.width() / 2, size.height())));
+
+    ui->autoRetryTextLabel->setVisible(false);
+    ui->autoRetryCancelButton->setVisible(false);
+    ui->autoRetryTextLabel->setText(QStringLiteral("Attempting to reconnect to port"));
+    connect(ui->autoRetryCancelButton, &QPushButton::pressed, this, &MainWindow::handleCancelAutoRetry);
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
 
@@ -410,8 +415,20 @@ void MainWindow::handleStartStopButton()
     }
 }
 
+void MainWindow::stopAutoRetryTimer()
+{
+    ui->autoRetryCancelButton->setVisible(false);
+    ui->autoRetryTextLabel->setVisible(false);
+    autoRetryTimer->stop();
+    autoRetryCounter = 0;
+}
+
 void MainWindow::handleRetryConnection()
 {
+    if (!ui->autoRetryTextLabel->isVisible()) {
+        ui->autoRetryTextLabel->setVisible(true);
+        ui->autoRetryCancelButton->setVisible(true);
+    }
 
     if (!serialPort->isOpen()) {
         autoRetryCounter++;
@@ -435,16 +452,14 @@ void MainWindow::handleRetryConnection()
                 QMessageBox::critical(this, QStringLiteral("Serial port info mismatch"), msg);
             }
 
-            autoRetryTimer->stop();
-            autoRetryCounter = 0;
+            stopAutoRetryTimer();
         } else {
             statusBarText->setText(QStringLiteral("Auto reconnect attempts: %1").arg(autoRetryCounter));
         }
     } else {
         // This should not happen since we stop the timer above
         qWarning() << "retry timer still active";
-        autoRetryTimer->stop();
-        autoRetryCounter = 0;
+        stopAutoRetryTimer();
     }
 }
 
@@ -462,7 +477,7 @@ void MainWindow::handleLongTermRunModeDialogDone(int result)
 
             Q_ASSERT(!longTermRunModePath.isEmpty());
             qInfo() << "Long term run mode enabled:" << longTermRunModeMaxMemory << longTermRunModeMaxTime << longTermRunModePath;
-            ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (location: %1)")
+            ui->LTRTextLabel->setText(QStringLiteral("Long term run mode active (location: %1)")
                     .arg(longTermRunModePath));
         } else {
             qInfo() << "Long term run mode disabled";
@@ -471,8 +486,8 @@ void MainWindow::handleLongTermRunModeDialogDone(int result)
             longTermRunModeTimer->stop();
         }
 
-        ui->statusIconLabel->setVisible(longTermRunModeEnabled);
-        ui->statusTextLabel->setVisible(longTermRunModeEnabled);
+        ui->LTRIconLabel->setVisible(longTermRunModeEnabled);
+        ui->LTRTextLabel->setVisible(longTermRunModeEnabled);
     }
 }
 
@@ -519,7 +534,7 @@ void MainWindow::handleLongTermRunModeTimer()
 
         const QString errStr = errCtr ? (QStringLiteral(" <b>(%1 errors)</b>").arg(QString::number(errCtr))) : QLatin1String("");
 
-        ui->statusTextLabel->setText(QStringLiteral("Long term run mode active (%1 files%2 saved in %3)")
+        ui->LTRTextLabel->setText(QStringLiteral("Long term run mode active (%1 files%2 saved in %3)")
                 .arg(QString::number(fileCounter), errStr, longTermRunModePath));
     }
 }
@@ -545,6 +560,12 @@ void MainWindow::handleStatusBarTimer()
     }
 
     statusBarText->setText(txt);
+}
+
+void MainWindow::handleCancelAutoRetry()
+{
+    stopAutoRetryTimer();
+    statusBarText->setText(QStringLiteral("Port disconnected, auto retry cancelled"));
 }
 
 void MainWindow::start()

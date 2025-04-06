@@ -77,10 +77,12 @@ private slots:
     void handleLongTermRunModeTimer();
     void handleFileWatchEvent(const QString& path);
     void handleStatusBarTimer();
+    void handleCancelAutoRetry();
 
 private:
     void start();
     void stop();
+    void stopAutoRetryTimer();
     static constexpr std::string_view DEV_PREFIX = "/dev/";
     Ui::MainWindow* ui {};
 
