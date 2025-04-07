@@ -617,8 +617,10 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         }
     } else {
         // Handle unknown error
-        static constexpr const char* ERR_MSG = "Failed to open serial port";
-        QMessageBox::warning(this, ERR_MSG, ERR_MSG % QStringLiteral(" %1: ").arg(port) % QString::fromStdString(getErrorStr()));
+        if (showMsgOnOpenErr) {
+            static constexpr const char* ERR_MSG = "Failed to open serial port";
+            QMessageBox::warning(this, ERR_MSG, ERR_MSG % QStringLiteral(" %1: ").arg(port) % QString::fromStdString(getErrorStr()));
+        }
     }
     ui->startStopButton->setEnabled(false);
 }
