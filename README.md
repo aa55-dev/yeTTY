@@ -42,11 +42,11 @@ Source code is available on [https://github.com/aa55-dev/yeTTY/](https://github.
 
 Debian bookworm:
 ```
-sudo apt install cmake g++ qtbase5-dev libqt5serialport5-dev qtmultimedia5-dev libkf5texteditor-dev libzstd-dev libsystemd-dev
+sudo apt install cmake g++ qtbase5-dev libqt5serialport5-dev qtmultimedia5-dev libkf5texteditor-dev libzstd-dev libsystemd-dev libboost-stacktrace-dev
 ```
 Debian trixie:
 ```
-sudo apt install cmake g++ qt6-base-dev qt6-serialport-dev qt6-multimedia-dev libkf6texteditor-dev libzstd-dev libsystemd-dev
+sudo apt install cmake g++ qt6-base-dev qt6-serialport-dev qt6-multimedia-dev libkf6texteditor-dev libzstd-dev libsystemd-dev libboost-stacktrace-dev libbacktrace-dev
 ```
 **2. Build**
 

@@ -1,8 +1,10 @@
 #include "autobauddetection.h"
 #include "ui_autobauddetection.h"
+
 #include <cctype>
 
 #include <QButtonGroup>
+#include <QDebug>
 #include <QIcon>
 
 AutoBaudDetection::AutoBaudDetection(QWidget* parent)

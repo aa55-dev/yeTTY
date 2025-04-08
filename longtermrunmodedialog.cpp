@@ -104,7 +104,7 @@ std::pair<bool, QString> LongTermRunModeDialog::isDirectoryWritable(const QStrin
 
     QFile testFile(directory + filename);
 
-    if (testFile.open(QIODeviceBase::WriteOnly)) {
+    if (testFile.open(QIODevice::WriteOnly)) {
 
         const auto result = testFile.write("Hello") > 0;
         const auto errMsg = testFile.errorString();

@@ -9,9 +9,11 @@
 #include <QString>
 #include <QWidget>
 #include <QtSerialPort/QSerialPort>
+
 #include <cstdint>
 #include <cstdlib>
 #include <experimental/source_location>
+#include <optional>
 #include <utility>
 #include <vector>
 #include <zstd.h>
