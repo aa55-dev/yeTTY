@@ -25,13 +25,16 @@ Source code is available on [https://github.com/aa55-dev/yeTTY/](https://github.
 
 5. Suspend during flashing
 
-    If your board uses the same serial port for both logs and flashing, prepend the flashing command with `yetty_suspend` to suspend yetty while the board is being flashed.
+    If your board uses the same serial port for both logs and flashing, prepend the flashing command with `yetty_suspend` to suspend yeTTY while the board is being flashed.
 
     ESP32 Example:
 
     ```
     yetty_suspend ttyUSB0 idf.py -p /dev/ttyUSB0 flash
     ```
+
+6. Auto baud rate detection
+    yeTTY can attempt to automatically detect the baud rate by trying out different baud rates till it finds one with readable ASCII text.
 
 ## Building
 
