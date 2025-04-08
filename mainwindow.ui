@@ -153,6 +153,7 @@
     </property>
     <addaction name="actionTrigger"/>
     <addaction name="actionLongTermRunMode"/>
+    <addaction name="actionAuto_baud_rate_detection"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -193,6 +194,11 @@
   <action name="actionLongTermRunMode">
    <property name="text">
     <string>&amp;Long term run mode</string>
+   </property>
+  </action>
+  <action name="actionAuto_baud_rate_detection">
+   <property name="text">
+    <string>&amp;Auto baud rate detection</string>
    </property>
   </action>
  </widget>

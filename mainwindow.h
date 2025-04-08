@@ -47,7 +47,7 @@ class MainWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(const std::optional<std::pair<QString, int>> &portParams);
+    explicit MainWindow(const std::optional<std::pair<QString, int>>& portParams);
     MainWindow(const MainWindow&) = delete;
     MainWindow(MainWindow&&) = delete;
     MainWindow& operator=(const MainWindow&) = delete;
@@ -78,6 +78,7 @@ private slots:
     void handleFileWatchEvent(const QString& path);
     void handleStatusBarTimer();
     void handleCancelAutoRetry();
+    void handleAutoBaudRateDetection();
 
 private:
     void start();

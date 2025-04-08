@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "autobauddetection.h"
 #include "common.hpp"
 #include "dbus_common.hpp"
 #include "longtermrunmodedialog.h"
@@ -49,7 +50,6 @@
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <Qt>
 
 #ifdef SYSTEMD_AVAILABLE
 #include <systemd/sd-bus.h>
@@ -120,6 +120,9 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
 
     ui->actionLongTermRunMode->setIcon(QIcon::fromTheme(QStringLiteral("media-record")));
     connect(ui->actionLongTermRunMode, &QAction::triggered, this, &MainWindow::handleLongTermRunModeAction);
+
+    ui->actionAuto_baud_rate_detection->setIcon(QIcon::fromTheme(QStringLiteral("search")));
+    connect(ui->actionAuto_baud_rate_detection, &QAction::triggered, this, &MainWindow::handleAutoBaudRateDetection);
 
     connect(ui->startStopButton, &QPushButton::pressed, this, &MainWindow::handleStartStopButton);
 
@@ -556,6 +559,12 @@ void MainWindow::handleCancelAutoRetry()
 {
     stopAutoRetryTimer(false);
     statusBarText->setText(QStringLiteral("Port disconnected, auto retry cancelled"));
+}
+
+void MainWindow::handleAutoBaudRateDetection()
+{
+    auto abd = std::make_unique<AutoBaudDetection>(this);
+    abd->exec();
 }
 
 void MainWindow::start()

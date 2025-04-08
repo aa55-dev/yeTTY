@@ -77,6 +77,7 @@ if (ENABLE_CLANG_TIDY)
         -altera-struct-pack-align,\
         -hicpp-named-parameter,\
         -readability-named-parameter,\
+        -boost-use-ranges,\
         -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.;--exclude-header-filter=ui_\*")
 endif()
 
@@ -169,7 +170,8 @@ add_executable(${PROJECT_NAME}
     longtermrunmodedialog.ui
     dbus_common.hpp
     common.hpp
-    portalreadyinusedialog.h portalreadyinusedialog.cpp portalreadyinusedialog.ui)
+    portalreadyinusedialog.h portalreadyinusedialog.cpp portalreadyinusedialog.ui
+    autobauddetection.h autobauddetection.cpp autobauddetection.ui)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia
