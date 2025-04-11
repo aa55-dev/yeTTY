@@ -12,7 +12,9 @@
 #include <QDBusConnection>
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 #include "mainwindow.h"
 #include "yetty.version.h"
@@ -27,12 +29,39 @@ static void printUsageAndExit()
 extern "C" void signal_handler(int);
 extern "C" void signal_handler(int)
 {
-    std::cerr << boost::stacktrace::stacktrace();
+    const auto stackTrace = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+    std::cerr << stackTrace;
+
+    const auto stdLocation = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    if (stdLocation.isEmpty()) {
+        return;
+    }
+    const auto& stackTraceDirPath = stdLocation.at(0);
+    QDir stackTraceDir(stackTraceDirPath);
+
+    if (!stackTraceDir.exists()) {
+        if (mkdir(stackTraceDirPath.toLocal8Bit(), S_IRWXU)) {
+            qCritical() << "Failed to mkdir: " << errno;
+            return;
+        }
+    }
+
+    QFile stackTraceFile(stackTraceDirPath + QStringLiteral("/stacktrace"));
+
+    if (!stackTraceFile.open(QIODevice::WriteOnly)) {
+        qCritical() << "Failed to open file for writing: " << errno;
+        return;
+    }
+
+    stackTraceFile.write(stackTrace.c_str(), static_cast<qint64>(stackTrace.size()));
+    stackTraceFile.close();
+
     exit(-1); // NOLINT(concurrency-mt-unsafe)
 }
 
 int main(int argc, char* argv[])
 {
+
     ::signal(SIGSEGV, &signal_handler); // NOLINT(cert-err33-c)
     ::signal(SIGABRT, &signal_handler); // NOLINT(cert-err33-c)
 
