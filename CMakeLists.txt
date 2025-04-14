@@ -78,6 +78,7 @@ if (ENABLE_CLANG_TIDY)
         -hicpp-named-parameter,\
         -readability-named-parameter,\
         -boost-use-ranges,\
+        -altera-id-dependent-backward-branch,\
         -altera-unroll-loops;-warnings-as-errors=*;-header-filter=.;--exclude-header-filter=ui_\*")
 endif()
 

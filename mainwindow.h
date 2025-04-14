@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "triggersetupdialog.h"
+
 #include <QDBusAbstractAdaptor>
 #include <QDBusMessage>
 #include <QElapsedTimer>
@@ -39,7 +41,6 @@ enum class ProgramState : std::uint8_t {
 
 class QSoundEffect;
 class QTimer;
-class TriggerSetupDialog;
 class LongTermRunModeDialog;
 class QElapsedTimer;
 class QLabel;
@@ -105,14 +106,16 @@ private:
     QString manufacturer;
     QString description;
     QString serialNumber;
-    QSoundEffect* sound {};
-    std::unique_ptr<TriggerSetupDialog> triggerSetupDialog;
 
     QElapsedTimer elapsedTimer;
 
+    QSoundEffect* sound {};
+    TriggerSetupDialog::TriggerType triggerType = TriggerSetupDialog::TriggerType::Disabled;
+    std::unique_ptr<TriggerSetupDialog> triggerSetupDialog;
     QByteArray triggerKeyword;
-    bool triggerActive {};
     int triggerMatchCount {};
+    QTimer* inactivityTimer {};
+    static constexpr auto INACTIVITY_TIMEOUT = 10'000;
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* autoRetryTimer {};
@@ -150,6 +153,7 @@ private:
     void setInhibit(const bool enabled);
 #endif
 
+    void audioAlert();
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents);
     static void validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc = std::experimental::source_location::current());
@@ -161,5 +165,9 @@ private:
     [[nodiscard]] bool isRecentlyEnumerated();
     bool handlePortBusy(const QString& port);
     void handlePortAccessError(const QString& port);
+
+    [[nodiscard]] static int stringMatchCount(QByteArray haystack, const QByteArray& needle);
+
+    void processTriggers(const QByteArray& newData);
 };
 #endif // MAINWINDOW_H

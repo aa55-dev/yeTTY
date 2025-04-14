@@ -155,6 +155,10 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
     ui->autoRetryCancelButton->setVisible(false);
     ui->autoRetryTextLabel->setText(QStringLiteral("Attempting to reconnect to port"));
     connect(ui->autoRetryCancelButton, &QPushButton::pressed, this, &MainWindow::handleCancelAutoRetry);
+
+    inactivityTimer = new QTimer(this); // NOLINT(cppcoreguidelines-owning-memory)
+    connect(inactivityTimer, &QTimer::timeout, this, &MainWindow::audioAlert);
+
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
 
@@ -250,28 +254,7 @@ void MainWindow::handleReadyRead()
     // the replace operation with multi byte unicode char will become be very expensive.
     newData.replace('\0', ' ');
 
-    if (triggerActive) {
-
-        // We will keep pushing whatever data we get into a QByteArray till we reach end of line,
-        // at which point we search for our trigger keyword in the constructed line.
-        for (const auto i : std::as_const(newData)) {
-            if (i == '\n') {
-                if (triggerSearchLine.contains(triggerKeyword)) {
-                    triggerMatchCount++;
-                    statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword.data()));
-                    statusBarTimer->start(5000);
-
-                    // TODO: This is broken. Qt plays the sound for a few times and then stops working.
-                    sound->play();
-                }
-
-                // clear() will free memory, resize(0) will not
-                triggerSearchLine.resize(0);
-            } else {
-                triggerSearchLine.push_back(i);
-            }
-        }
-    }
+    processTriggers(newData);
 
     doc->setReadWrite(true);
     doc->insertText(doc->documentEnd(), newData);
@@ -379,13 +362,21 @@ void MainWindow::handleTriggerSetupAction()
 void MainWindow::handleTriggerSetupDialogDone(int result)
 {
     if (result == QDialog::Accepted) {
+        triggerType = triggerSetupDialog->getTriggerType();
 
-        const auto newKeyword = triggerSetupDialog->getKeyword().toUtf8();
-        if (newKeyword != triggerKeyword) {
-            qInfo() << "Setting new trigger keyword: " << triggerKeyword << " " << newKeyword;
-            triggerKeyword = newKeyword;
-            triggerActive = !newKeyword.isEmpty();
-            triggerMatchCount = 0;
+        if (triggerType == TriggerSetupDialog::TriggerType::StringMatch) {
+            const auto newKeyword = triggerSetupDialog->getKeyword().toUtf8();
+            if (newKeyword != triggerKeyword) {
+                qInfo() << "Setting new trigger keyword: " << triggerKeyword << " " << newKeyword;
+                triggerKeyword = newKeyword;
+                triggerMatchCount = 0;
+            }
+        }
+
+        if (triggerType == TriggerSetupDialog::TriggerType::Inactivity) {
+            inactivityTimer->start(INACTIVITY_TIMEOUT);
+        } else {
+            inactivityTimer->stop();
         }
     }
 }
@@ -750,6 +741,13 @@ void MainWindow::setInhibit(const bool enabled)
     inhibitFd = newFd;
 }
 
+void MainWindow::audioAlert()
+{
+    if (!sound->isPlaying()) {
+        sound->play();
+    }
+}
+
 #endif
 
 std::string MainWindow::getErrorStr()
@@ -994,4 +992,46 @@ void MainWindow::handlePortAccessError(const QString& port)
         return;
     }
     qWarning() << "Permission denied, possibly just enumerated";
+}
+
+int MainWindow::stringMatchCount(QByteArray haystack, const QByteArray& needle)
+{
+    qsizetype idx {};
+    int count {};
+
+    while ((idx = haystack.indexOf(needle)) >= 0) {
+        count++;
+        haystack.slice(idx + needle.size());
+    }
+
+    return count;
+}
+
+void MainWindow::processTriggers(const QByteArray& newData)
+{
+    if (triggerType == TriggerSetupDialog::TriggerType::Disabled) {
+        return;
+    }
+
+    if (triggerType == TriggerSetupDialog::TriggerType::StringMatch) {
+        triggerSearchLine.append(newData);
+
+        if (triggerSearchLine.contains(triggerKeyword)) {
+            triggerMatchCount += stringMatchCount(triggerSearchLine, triggerKeyword);
+            statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword.data()));
+            statusBarTimer->start(5000);
+
+            audioAlert();
+            triggerSearchLine.resize(0);
+        }
+
+        if (const auto lastIdx = triggerSearchLine.lastIndexOf('\n'); lastIdx > 0) {
+            triggerSearchLine.slice(lastIdx + 1);
+        }
+
+    } else if (triggerType == TriggerSetupDialog::TriggerType::Activity) {
+        audioAlert();
+    } else if (triggerType == TriggerSetupDialog::TriggerType::Inactivity) {
+        inactivityTimer->start(INACTIVITY_TIMEOUT);
+    }
 }

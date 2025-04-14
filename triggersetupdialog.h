@@ -18,10 +18,22 @@ public:
     TriggerSetupDialog& operator=(TriggerSetupDialog&&) = delete;
     ~TriggerSetupDialog() override;
 
+    enum class TriggerType : std::uint8_t {
+        Disabled,
+        StringMatch,
+        Activity,
+        Inactivity
+    };
+
+    [[nodiscard]] TriggerType getTriggerType() const;
     [[nodiscard]] QString getKeyword() const;
 
 private:
     Ui::TriggerSetupDialog* ui {};
+
+private slots:
+    void handleStringRadioButton();
+    void handleKeywordChanged();
 };
 
 #endif // TRIGGERSETUPDIALOG_H

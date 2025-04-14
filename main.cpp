@@ -37,7 +37,7 @@ extern "C" void signal_handler(int)
         return;
     }
     const auto& stackTraceDirPath = stdLocation.at(0);
-    QDir stackTraceDir(stackTraceDirPath);
+    const QDir stackTraceDir(stackTraceDirPath);
 
     if (!stackTraceDir.exists()) {
         if (mkdir(stackTraceDirPath.toLocal8Bit(), S_IRWXU)) {
