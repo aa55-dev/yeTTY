@@ -20,6 +20,7 @@
 #include <cerrno>
 #include <cstring>
 #include <grp.h>
+#include <iostream>
 #include <malloc.h>
 #include <pwd.h>
 #include <stdexcept>
@@ -43,6 +44,7 @@
 #include <QPushButton>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QSocketNotifier>
 #include <QSoundEffect>
 #include <QString>
 #include <QStringBuilder>
@@ -55,8 +57,8 @@
 #include <systemd/sd-bus.h>
 #endif
 
-MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
-    : QMainWindow(nullptr)
+MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>& portParams, QWidget* parent)
+    : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , fsWatcher(new QFileSystemWatcher(this))
     , serialPort(new QSerialPort(this))
@@ -70,13 +72,18 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
     int baud {};
 
     if (portParams.has_value()) {
-        std::tie(portLocation, baud) = portParams.value();
+        std::tie(srcType, portLocation, baud) = portParams.value();
     } else {
         std::tie(portLocation, baud) = getPortFromUser();
+        srcType = SourceType::Serial;
     }
 
     Q_ASSERT(!portLocation.isEmpty());
-    Q_ASSERT(baud > 0);
+    if (srcType != SourceType::Stdin) {
+        Q_ASSERT(baud > 0);
+    } else {
+        Q_ASSERT(baud < 0);
+    }
 
     elapsedTimer.start();
     ui->setupUi(this);
@@ -91,7 +98,12 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
 
     ui->verticalLayout->insertWidget(0, view);
 
-    connectToDevice(portLocation, baud);
+    if (srcType == SourceType::Stdin) {
+        connectToStdin();
+    } else {
+        Q_ASSERT(srcType == SourceType::Serial);
+        connectToSerialDevice(portLocation, baud);
+    }
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
@@ -164,8 +176,13 @@ MainWindow::MainWindow(const std::optional<std::pair<QString, int>>& portParams)
 
 MainWindow::~MainWindow()
 {
-    QSettings settings;
-    settings.setValue(SETTINGS_LAST_USED_PORT, QStringList { serialPort->portName(), QString::number(serialPort->baudRate()) });
+    const auto portName = serialPort->portName();
+    if (!portName.isEmpty()) {
+        QSettings settings;
+        const auto baud = QString::number(serialPort->baudRate());
+        Q_ASSERT(!baud.isEmpty());
+        settings.setValue(SETTINGS_LAST_USED_PORT, QStringList { serialPort->portName(), baud });
+    }
     delete ui;
     ZSTD_freeCCtx(zstdCtx);
     zstdCtx = nullptr;
@@ -202,6 +219,19 @@ void MainWindow::portName(QString& out)
     out = serialPort->portName();
 }
 
+void MainWindow::handleNewData(QByteArray newData)
+{
+    // Need to remove '\0' from the input or else we might mess up the text shown or
+    // affect string operation downstream
+    newData.replace('\0', ' ');
+
+    processTriggers(newData);
+
+    doc->setReadWrite(true);
+    doc->insertText(doc->documentEnd(), newData);
+    doc->setReadWrite(false);
+}
+
 void MainWindow::setProgramState(const ProgramState newState)
 {
     if (newState == currentProgramState) {
@@ -218,8 +248,10 @@ void MainWindow::setProgramState(const ProgramState newState)
         ui->startStopButton->setText(QStringLiteral("&Stop"));
         ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-stop")));
 
-        Q_ASSERT(fsWatcher->files().isEmpty());
-        fsWatcher->addPath(getSerialPortPath());
+        if (srcType == SourceType::Serial) {
+            Q_ASSERT(fsWatcher->files().isEmpty());
+            fsWatcher->addPath(getSerialPortPath());
+        }
 
     } else if (newState == ProgramState::Stopped) {
         qInfo() << "Program stopped";
@@ -227,7 +259,9 @@ void MainWindow::setProgramState(const ProgramState newState)
         ui->startStopButton->setText(QStringLiteral("&Start"));
         ui->startStopButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-start")));
 
-        fsWatcher->removePaths(fsWatcher->files());
+        if (srcType == SourceType::Serial) {
+            fsWatcher->removePaths(fsWatcher->files());
+        }
     } else {
         qCritical() << "Invalid state";
     }
@@ -247,18 +281,7 @@ std::pair<QString, int> MainWindow::getPortFromUser()
 
 void MainWindow::handleReadyRead()
 {
-    auto newData = serialPort->readAll();
-
-    // Need to remove '\0' from the input or else we might mess up the text shown or
-    // affect string operation downstream. We could replace it with "�" but
-    // the replace operation with multi byte unicode char will become be very expensive.
-    newData.replace('\0', ' ');
-
-    processTriggers(newData);
-
-    doc->setReadWrite(true);
-    doc->insertText(doc->documentEnd(), newData);
-    doc->setReadWrite(false);
+    handleNewData(serialPort->readAll());
 }
 
 void MainWindow::handleError(const QSerialPort::SerialPortError error)
@@ -344,7 +367,8 @@ void MainWindow::handleConnectAction()
     try {
         const auto [location, baud] = getPortFromUser();
         handleClearAction();
-        connectToDevice(location, baud);
+        srcType = SourceType::Serial;
+        connectToSerialDevice(location, baud);
     } catch (std::runtime_error& e) {
         QMessageBox::critical(this, QStringLiteral("Error"), e.what());
     }
@@ -406,6 +430,7 @@ void MainWindow::stopAutoRetryTimer(const bool deleteMsg)
 
 void MainWindow::handleRetryConnection()
 {
+    Q_ASSERT(srcType == SourceType::Serial);
     if (!ui->autoRetryTextLabel->isVisible()) {
         ui->autoRetryTextLabel->setVisible(true);
         ui->autoRetryCancelButton->setVisible(true);
@@ -418,7 +443,7 @@ void MainWindow::handleRetryConnection()
         const auto prevManufacturer = manufacturer;
         const auto prevDescription = description;
 
-        connectToDevice(serialPort->portName(), serialPort->baudRate(), false);
+        connectToSerialDevice(serialPort->portName(), serialPort->baudRate(), false);
 
         if (serialPort->isOpen()) {
             // This can happen if the user plugged in a new serial device.
@@ -560,12 +585,37 @@ void MainWindow::handleAutoBaudRateDetection()
 
 void MainWindow::start()
 {
-    connectToDevice(serialPort->portName(), serialPort->baudRate());
+    switch (srcType) {
+    case SourceType::Serial:
+        connectToSerialDevice(serialPort->portName(), serialPort->baudRate());
+        break;
+    case SourceType::Stdin:
+        connectToStdin();
+        break;
+    case SourceType::Unknown:
+        [[fallthrough]];
+    default:
+        Q_ASSERT(false);
+        break;
+    }
 }
 
 void MainWindow::stop()
 {
-    closeSerialPort();
+    switch (srcType) {
+    case SourceType::Serial:
+        closeSerialPort();
+        break;
+    case SourceType::Stdin:
+        closeStdin();
+        break;
+    case SourceType::Unknown:
+        [[fallthrough]];
+    default:
+        Q_ASSERT(false);
+        break;
+    }
+    setProgramState(ProgramState::Stopped);
 }
 
 void MainWindow::handleLongTermRunModeAction()
@@ -577,8 +627,39 @@ void MainWindow::handleLongTermRunModeAction()
     longTermRunModeDialog->open();
 }
 
-void MainWindow::connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr)
+void MainWindow::handleSocketNotifierActivated(QSocketDescriptor socket, QSocketNotifier::Type)
 {
+    if (!socket.isValid()) {
+        stop();
+        return;
+    }
+
+    if (std::string line; std::getline(std::cin, line)) {
+        handleNewData((line + "\n").c_str());
+    } else {
+        // Handle EOF in input
+        std::cin.clear();
+        if (freopen("/dev/tty", "r", stdin) == nullptr) { // NOLINT(cppcoreguidelines-owning-memory)
+            qCritical() << "Failed to reopen stdin" << errno;
+        }
+        qInfo() << std::cin.good() << std::cin.eof();
+    }
+}
+
+void MainWindow::connectToStdin()
+{
+    Q_ASSERT(sockNotifier == nullptr);
+
+    sockNotifier = new QSocketNotifier(fileno(stdin), QSocketNotifier::Read, this); // NOLINT(cppcoreguidelines-owning-memory)
+    connect(sockNotifier, &QSocketNotifier::activated, this, &MainWindow::handleSocketNotifierActivated);
+    setProgramState(ProgramState::Started);
+
+    ui->portInfoLabel->setText(QStringLiteral("stdin"));
+}
+
+void MainWindow::connectToSerialDevice(const QString& port, const int baud, const bool showMsgOnOpenErr)
+{
+    Q_ASSERT(srcType == SourceType::Serial);
     serialPort->setPortName(port);
     serialPort->setBaudRate(baud);
 
@@ -613,7 +694,7 @@ void MainWindow::connectToDevice(const QString& port, const int baud, const bool
         const auto result = handlePortBusy(port);
         if (result) {
             QTimer::singleShot(0, Qt::PreciseTimer, this,
-                [this, port, baud, showMsgOnOpenErr]() { connectToDevice(port, baud, showMsgOnOpenErr); });
+                [this, port, baud, showMsgOnOpenErr]() { connectToSerialDevice(port, baud, showMsgOnOpenErr); });
         }
     } else {
         // Handle unknown error
@@ -677,7 +758,7 @@ std::tuple<QString, QString> MainWindow::findProcessUsingPort(const QString& por
 
             argsList.replace(0, argsList.at(0).toLower());
 
-            return { pid, argsList.join(" ").trimmed() };
+            return { pid, argsList.join(QLatin1String(" ")).trimmed() };
         }
     }
 
@@ -767,9 +848,25 @@ void MainWindow::writeCompressedFile(const QByteArray& contents)
         return;
     }
 
+    QString portName = QStringLiteral("yetty");
+
+    switch (srcType) {
+    case SourceType::Serial:
+        portName = serialPort->portName();
+        break;
+    case SourceType::Stdin:
+        portName = QStringLiteral("stdin");
+        break;
+    case SourceType::Unknown:
+        [[fallthrough]];
+    default:
+        Q_ASSERT(false);
+        break;
+    }
+
     const auto curDate = QDateTime::currentDateTime();
     const auto filename = QString(QStringLiteral("%1/%2_%3_%4.txt.zst"))
-                              .arg(longTermRunModePath, serialPort->portName(),
+                              .arg(longTermRunModePath, portName,
                                   curDate.toString(QStringLiteral("yyyy-MM-dd-hh_mm-ss")),
                                   (QStringLiteral("%1").arg(fileCounter, 8, 10, QLatin1Char('0'))));
 
@@ -825,15 +922,24 @@ void MainWindow::validateZstdResult(const size_t result, const std::experimental
 
 QString MainWindow::getSerialPortPath() const
 {
+    Q_ASSERT(srcType == SourceType::Serial);
     return QString::fromLatin1(DEV_PREFIX.data(), DEV_PREFIX.size()) + serialPort->portName();
+}
+
+void MainWindow::closeStdin()
+{
+    Q_ASSERT(srcType == SourceType::Stdin);
+    sockNotifier->setEnabled(false);
+    delete sockNotifier;
+    sockNotifier = nullptr;
 }
 
 void MainWindow::closeSerialPort()
 {
+    Q_ASSERT(srcType == SourceType::Serial);
     if (serialPort->isOpen()) {
         serialPort->close();
     }
-    setProgramState(ProgramState::Stopped);
 }
 
 std::tuple<QString, QString, QString> MainWindow::getPortInfo(QString portLocation)
@@ -909,6 +1015,7 @@ bool MainWindow::isUserPermissionSetupCorrectly()
 
 bool MainWindow::isRecentlyEnumerated()
 {
+    Q_ASSERT(srcType == SourceType::Serial);
     const auto& portPath = getSerialPortPath();
     if (portPath.isEmpty()) {
         qWarning() << "port path error";
@@ -931,7 +1038,7 @@ bool MainWindow::handlePortBusy(const QString& port)
     qInfo() << pid << command;
     if (pid.isEmpty() || command.isEmpty()) {
         // The port is probably in use by another user
-        QMessageBox::critical(this, "Failed to open port", "Port is already in use by another process");
+        QMessageBox::critical(this, QStringLiteral("Failed to open port"), QStringLiteral("Port is already in use by another process"));
         return false;
     }
     auto* const dlg = new PortAlreadyInUseDialog(this, pid, command); // NOLINT(cppcoreguidelines-owning-memory)

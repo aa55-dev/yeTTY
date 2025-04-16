@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
+#include <QSocketDescriptor>
 #include <QString>
 #include <QWidget>
 #include <QtSerialPort/QSerialPort>
@@ -39,6 +40,13 @@ enum class ProgramState : std::uint8_t {
     Stopped
 };
 
+enum class SourceType : std::uint8_t {
+    Unknown,
+    Serial,
+    Stdin
+};
+
+class QSocketNotifier;
 class QSoundEffect;
 class QTimer;
 class LongTermRunModeDialog;
@@ -50,7 +58,7 @@ class MainWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(const std::optional<std::pair<QString, int>>& portParams);
+    explicit MainWindow(const std::optional<std::tuple<SourceType, QString, int>>& portParams, QWidget* parent = nullptr);
     MainWindow(const MainWindow&) = delete;
     MainWindow(MainWindow&&) = delete;
     MainWindow& operator=(const MainWindow&) = delete;
@@ -62,6 +70,7 @@ public slots:
     Q_SCRIPTABLE void portName(QString& out);
 
 private slots:
+    void handleNewData(QByteArray newData);
     void handleReadyRead();
     void handleError(const QSerialPort::SerialPortError error);
 
@@ -83,6 +92,8 @@ private slots:
     void handleCancelAutoRetry();
     void handleAutoBaudRateDetection();
 
+    void handleSocketNotifierActivated(QSocketDescriptor socket, QSocketNotifier::Type);
+
 private:
     void start();
     void stop();
@@ -97,11 +108,14 @@ private:
     void setProgramState(const ProgramState newState);
     [[nodiscard]] static std::pair<QString, int> getPortFromUser();
 
-    void connectToDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
+    void connectToStdin();
+    void connectToSerialDevice(const QString& port, const int baud, const bool showMsgOnOpenErr = true);
 
     // Qt is unable to detect disconnection, we need to use inotify to monitor the serial port file path.
     QFileSystemWatcher* fsWatcher;
 
+    QSocketNotifier* sockNotifier {};
+    SourceType srcType = SourceType::Unknown;
     QSerialPort* serialPort {};
     QString manufacturer;
     QString description;
@@ -158,6 +172,7 @@ private:
     void writeCompressedFile(const QByteArray& contents);
     static void validateZstdResult(const size_t result, const std::experimental::source_location& srcLoc = std::experimental::source_location::current());
     [[nodiscard]] QString getSerialPortPath() const;
+    void closeStdin();
     void closeSerialPort();
     [[nodiscard]] static std::tuple<QString, QString, QString> getPortInfo(QString portLocation);
     // Checks if the user is in "dialout" group

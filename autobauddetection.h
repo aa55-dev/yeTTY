@@ -39,7 +39,7 @@ private:
     QSerialPort serial;
 
     void tryNextBaud();
-    void setResult(const bool isSuccess, const int baud = 0, const QString &errMsg = "");
+    void setResult(const bool isSuccess, const int baud = 0, const QString &errMsg = QLatin1String(""));
     void stop();
 
 private slots:

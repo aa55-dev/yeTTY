@@ -21,8 +21,9 @@
 
 static void printUsageAndExit()
 {
-    // NOLINTNEXTLINE(cert-err33-c)
-    fputs("Usage: " PROJECT_NAME " PORTNAME BAUDRATE\n", stderr);
+    fputs("Usage:", stderr); // NOLINT(cert-err33-c)
+    fputs("\tserial port: yetty PORTNAME BAUDRATE\n", stderr); // NOLINT(cert-err33-c)
+    fputs("\tstdin: yetty -\n", stderr); // NOLINT(cert-err33-c)
     exit(EXIT_FAILURE); // NOLINT(concurrency-mt-unsafe)
 }
 
@@ -65,12 +66,14 @@ int main(int argc, char* argv[])
     ::signal(SIGSEGV, &signal_handler); // NOLINT(cert-err33-c)
     ::signal(SIGABRT, &signal_handler); // NOLINT(cert-err33-c)
 
-    if (argc != 1 && argc != 3) {
+    if (argc > 3) {
         printUsageAndExit();
     }
+    auto srcType = SourceType::Unknown;
     QString portLocation;
     int baud {};
     if (argc == 3) {
+        srcType = SourceType::Serial;
         portLocation = argv[1]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         try {
             baud = std::stoi(argv[2]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -84,6 +87,13 @@ int main(int argc, char* argv[])
             qCritical() << "port name is invalid: " << portLocation;
             printUsageAndExit();
         }
+    } else if (argc == 2) {
+        srcType = SourceType::Stdin;
+        portLocation = argv[1]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (portLocation != "-") {
+            printUsageAndExit();
+        }
+        baud = -1;
     }
 
     const QApplication a(argc, argv);
@@ -102,7 +112,9 @@ int main(int argc, char* argv[])
     QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(PROJECT_DOMAIN)));
 
     try {
-        MainWindow w(argc == 3 ? std::optional<std::pair<QString, int>> { std::in_place, portLocation, baud } : std::nullopt);
+        const auto appArg = argc > 1 ? std::optional<std::tuple<SourceType, QString, int>> { std::in_place, srcType, portLocation, baud }
+                                     : std::nullopt;
+        MainWindow w(appArg);
         w.show();
         return QApplication::exec();
     } catch (std::exception& e) {

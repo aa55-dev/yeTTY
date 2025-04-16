@@ -100,7 +100,7 @@ void AutoBaudDetection::setResult(const bool isSuccess, const int baud, const QS
     } else {
         pixmap = QIcon::fromTheme(QStringLiteral("data-error")).pixmap(height, height);
         text = QStringLiteral("Failed to find baud for %1: %2")
-                   .arg(serial.portName(), errMsg.isEmpty() ? "" : errMsg);
+                   .arg(serial.portName(), errMsg.isEmpty() ? QLatin1String("") : errMsg);
     }
 
     ui->statusIconLabel->setPixmap(pixmap);
