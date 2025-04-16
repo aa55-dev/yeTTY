@@ -167,6 +167,7 @@ private:
     void setInhibit(const bool enabled);
 #endif
 
+    void executeTriggerAction();
     void audioAlert();
     [[nodiscard]] static std::string getErrorStr();
     void writeCompressedFile(const QByteArray& contents);

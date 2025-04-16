@@ -24,16 +24,24 @@ public:
         Activity,
         Inactivity
     };
+    enum class TriggerActionType : std::uint8_t {
+        PlaySound,
+        ExecuteCommand
+    };
 
     [[nodiscard]] TriggerType getTriggerType() const;
     [[nodiscard]] QString getKeyword() const;
+
+    [[nodiscard]] TriggerActionType getTriggerActionType() const;
+    [[nodiscard]] QString getTriggerActionCommand() const;
 
 private:
     Ui::TriggerSetupDialog* ui {};
 
 private slots:
     void handleStringRadioButton();
-    void handleKeywordChanged();
+    void handleExecCmdRadioButton();
+    void handleLineEditTextChange();
 };
 
 #endif // TRIGGERSETUPDIALOG_H

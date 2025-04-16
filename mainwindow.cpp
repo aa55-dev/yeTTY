@@ -41,6 +41,7 @@
 #include <QKeyEvent>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QProcess>
 #include <QPushButton>
 #include <QSerialPortInfo>
 #include <QSettings>
@@ -169,7 +170,7 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     connect(ui->autoRetryCancelButton, &QPushButton::pressed, this, &MainWindow::handleCancelAutoRetry);
 
     inactivityTimer = new QTimer(this); // NOLINT(cppcoreguidelines-owning-memory)
-    connect(inactivityTimer, &QTimer::timeout, this, &MainWindow::audioAlert);
+    connect(inactivityTimer, &QTimer::timeout, this, &MainWindow::executeTriggerAction);
 
     qDebug() << "Init complete in:" << elapsedTimer.elapsed();
 }
@@ -821,6 +822,34 @@ void MainWindow::setInhibit(const bool enabled)
 
     inhibitFd = newFd;
 }
+#endif
+
+void MainWindow::executeTriggerAction()
+{
+    switch (triggerSetupDialog->getTriggerActionType()) {
+    case TriggerSetupDialog::TriggerActionType::PlaySound:
+        audioAlert();
+        break;
+    case TriggerSetupDialog::TriggerActionType::ExecuteCommand: {
+        auto parts = triggerSetupDialog->getTriggerActionCommand().split(' ');
+        Q_ASSERT(!parts.isEmpty());
+
+        auto* process = new QProcess(this); // NOLINT(cppcoreguidelines-owning-memory)
+        process->setProgram(parts.at(0));
+
+        if (parts.size() > 1) {
+            parts.removeFirst();
+            process->setArguments(parts);
+        }
+
+        connect(process, &QProcess::finished, process, &QObject::deleteLater);
+        process->start();
+
+    } break;
+    default:
+        Q_ASSERT(false);
+    }
+}
 
 void MainWindow::audioAlert()
 {
@@ -828,8 +857,6 @@ void MainWindow::audioAlert()
         sound->play();
     }
 }
-
-#endif
 
 std::string MainWindow::getErrorStr()
 {
@@ -1128,7 +1155,7 @@ void MainWindow::processTriggers(const QByteArray& newData)
             statusBarText->setText(QStringLiteral("<b>%1 matches for %2</b>").arg(triggerMatchCount).arg(triggerKeyword.data()));
             statusBarTimer->start(5000);
 
-            audioAlert();
+            executeTriggerAction();
             triggerSearchLine.resize(0);
         }
 
@@ -1137,7 +1164,7 @@ void MainWindow::processTriggers(const QByteArray& newData)
         }
 
     } else if (triggerType == TriggerSetupDialog::TriggerType::Activity) {
-        audioAlert();
+        executeTriggerAction();
     } else if (triggerType == TriggerSetupDialog::TriggerType::Inactivity) {
         inactivityTimer->start(INACTIVITY_TIMEOUT);
     }
