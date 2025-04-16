@@ -34,6 +34,7 @@ Source code is available on [https://github.com/aa55-dev/yeTTY/](https://github.
     ```
 
 6. Auto baud rate detection
+
     yeTTY can attempt to automatically detect the baud rate by trying out different baud rates till it finds one with readable ASCII text.
 
 ## Building
