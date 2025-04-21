@@ -300,7 +300,10 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     if (!QFile::exists(portName)) {
         errMsg += QStringLiteral(": %1 detached").arg(portName);
     }
-    qCritical() << "Serial port error: " << error;
+    // Only log once when auto retrying
+    if (autoRetryCounter <= 1) {
+        qWarning() << "Serial port error: " << error;
+    }
     statusBarText->setText(errMsg);
 
     if (!serialPortErrMsgActive) {
@@ -435,11 +438,11 @@ void MainWindow::handleRetryConnection()
     if (!ui->autoRetryTextLabel->isVisible()) {
         ui->autoRetryTextLabel->setVisible(true);
         ui->autoRetryCancelButton->setVisible(true);
+        qInfo() << "Auto reconnect started";
     }
 
     if (!serialPort->isOpen()) {
         autoRetryCounter++;
-        qInfo() << "Retrying connection";
         const auto prevSerial = serialNumber;
         const auto prevManufacturer = manufacturer;
         const auto prevDescription = description;
@@ -464,6 +467,9 @@ void MainWindow::handleRetryConnection()
             doc->postMessage(msg);
             stopAutoRetryTimer();
         } else {
+            if (autoRetryCounter % 10 == 0) {
+                qInfo() << "Auto reconnect attempt " << autoRetryCounter;
+            }
             statusBarText->setText(QStringLiteral("Auto reconnect attempts: %1").arg(autoRetryCounter));
         }
     } else {
@@ -675,7 +681,10 @@ void MainWindow::connectToSerialDevice(const QString& port, const int baud, cons
 
     ui->portInfoLabel->setText(portInfoText);
 
-    qInfo() << "Connecting to: " << port << baud;
+    // Only log once when auto retrying
+    if (autoRetryCounter <= 1) {
+        qInfo() << "Connecting to: " << port << baud;
+    }
     serialPort->clearError();
 
     if (serialPort->open(QIODevice::ReadOnly)) {
