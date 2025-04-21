@@ -68,7 +68,6 @@ QString TriggerSetupDialog::getTriggerActionCommand() const
 
 TriggerSetupDialog::TriggerActionType TriggerSetupDialog::getTriggerActionType() const
 {
-    qInfo() << ui->playSoundRadioButton->isChecked();
     return (ui->playSoundRadioButton->isChecked() ? TriggerActionType::PlaySound : TriggerActionType::ExecuteCommand);
 }
 
