@@ -13,45 +13,23 @@ PortSelectionDialog::PortSelectionDialog(QWidget* parent)
     , ui(new Ui::PortSelectionDialog)
 {
     ui->setupUi(this);
-    connect(ui->portsComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PortSelectionDialog::onCurrentIdxChanged);
-
-    ui->baudRateLineEdit->setText(QStringLiteral("115200"));
-    availablePorts = QSerialPortInfo::availablePorts();
 
     const QSettings settings;
     const auto previouslyUsedPortInfo = settings.value(SETTINGS_LAST_USED_PORT).toStringList();
-    QString prevPort;
-    QString prevBaud;
 
     if (previouslyUsedPortInfo.size() == 2) {
-        prevPort = previouslyUsedPortInfo[0];
-        prevBaud = previouslyUsedPortInfo[1];
+        previouslyUsedPort = previouslyUsedPortInfo[0];
+        previouslyUsedBaud = previouslyUsedPortInfo[1];
     }
 
-    int idx = 0;
-    int highlightIndex = -1;
-    for (const auto& i : std::as_const(availablePorts)) {
-        ui->portsComboBox->addItem(i.systemLocation());
-        if (i.portName() == prevPort) {
-            highlightIndex = idx;
-        }
-        idx++;
-    }
+    connect(ui->portsComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PortSelectionDialog::onCurrentIdxChanged);
+    connect(ui->refreshButton, &QPushButton::pressed, this, &PortSelectionDialog::onRefreshButtonPressed);
 
-    constexpr int BAUD_MAX_VALUE = 100 * 1000 * 1000;
     // set focus so that enter works
     ui->portsComboBox->setFocus();
     ui->baudRateLineEdit->setValidator(new QIntValidator(1, BAUD_MAX_VALUE, this)); // NOLINT(cppcoreguidelines-owning-memory)
 
-    if (highlightIndex >= 0) {
-        ui->portsComboBox->setCurrentIndex(highlightIndex);
-
-        bool ok = false;
-        const auto baudInt = prevBaud.toInt(&ok);
-        if (ok && baudInt > 0 && baudInt < BAUD_MAX_VALUE) {
-            ui->baudRateLineEdit->setText(prevBaud);
-        }
-    }
+    onRefreshButtonPressed();
 }
 
 PortSelectionDialog::~PortSelectionDialog()
@@ -65,8 +43,44 @@ std::pair<QString, int> PortSelectionDialog::getSelectedPortInfo() const
     return { port.systemLocation(), getSelectedBaud() };
 }
 
+void PortSelectionDialog::onRefreshButtonPressed()
+{
+    ui->portsComboBox->clear();
+    availablePorts = QSerialPortInfo::availablePorts();
+
+    int idx = 0;
+    int highlightIndex = -1;
+    for (const auto& i : std::as_const(availablePorts)) {
+        ui->portsComboBox->addItem(i.systemLocation());
+        if (i.portName() == previouslyUsedPort) {
+            highlightIndex = idx;
+        }
+        idx++;
+    }
+
+    if (highlightIndex >= 0) {
+        ui->portsComboBox->setCurrentIndex(highlightIndex);
+
+        bool ok = false;
+        const auto baudInt = previouslyUsedBaud.toInt(&ok);
+        if (ok && baudInt > 0 && baudInt < BAUD_MAX_VALUE) {
+            ui->baudRateLineEdit->setText(previouslyUsedBaud);
+        }
+    }
+    if (ui->baudRateLineEdit->text().isEmpty()) {
+        ui->baudRateLineEdit->setText(QStringLiteral("115200"));
+    }
+}
+
 void PortSelectionDialog::onCurrentIdxChanged(int idx)
 {
+    if (idx < 0) {
+        ui->descriptionLabel->clear();
+        ui->manufacturerLabel->clear();
+        ui->pidvidLabel->clear();
+        return;
+    }
+
     const auto& port = availablePorts.at(idx);
 
     ui->descriptionLabel->setText(port.description());

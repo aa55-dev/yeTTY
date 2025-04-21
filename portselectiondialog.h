@@ -21,14 +21,20 @@ public:
 
     [[nodiscard]] std::pair<QString, int> getSelectedPortInfo() const;
 
-public slots:
+private slots:
+    void onRefreshButtonPressed();
     void onCurrentIdxChanged(int idx);
 
 private:
+    static constexpr int BAUD_MAX_VALUE = 100 * 1000 * 1000;
     Ui::PortSelectionDialog* ui {};
     QString selectedPortLocation;
     QList<QSerialPortInfo> availablePorts;
     [[nodiscard]] int getSelectedBaud() const;
+
+    // Port used by the user when the application was used the last time
+    QString previouslyUsedPort;
+    QString previouslyUsedBaud;
 };
 
 #endif // PORTSELECTIONDIALOG_H
