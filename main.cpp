@@ -111,6 +111,8 @@ int main(int argc, char* argv[])
     // This is needed to show the icon in the "About" window
     QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral(PROJECT_DOMAIN)));
 
+    qSetMessagePattern("%{type}:%{function}():%{line} %{message}");
+
     try {
         const auto appArg = argc > 1 ? std::optional<std::tuple<SourceType, QString, int>> { std::in_place, srcType, portLocation, baud }
                                      : std::nullopt;
