@@ -151,6 +151,7 @@ private:
     ZSTD_CCtx* zstdCtx {};
     std::vector<char> zstdOutBuffer;
     bool serialPortErrMsgActive {};
+    bool serialPortErrMsgShown {};
     KTextEditor::Message* serialPortErrMsg {};
 
     int fileCounter {};

@@ -306,10 +306,11 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
     }
     statusBarText->setText(errMsg);
 
-    if (!serialPortErrMsgActive) {
+    if (!serialPortErrMsgShown) {
         serialPortErrMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
+        connect(serialPortErrMsg, &KTextEditor::Message::closed, this, [this](KTextEditor::Message *) { serialPortErrMsgActive = false; });
         doc->postMessage(serialPortErrMsg);
-        serialPortErrMsgActive = true;
+        serialPortErrMsgShown = serialPortErrMsgActive = true;
     }
 
     setProgramState(ProgramState::Stopped);
@@ -429,6 +430,7 @@ void MainWindow::stopAutoRetryTimer(const bool deleteMsg)
             serialPortErrMsg->deleteLater();
         }
     }
+    serialPortErrMsgShown = false;
     autoRetryCounter = 0;
 }
 
