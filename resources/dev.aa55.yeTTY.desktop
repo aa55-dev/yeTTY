@@ -2,7 +2,7 @@
 [Desktop Entry]
 Name=yeTTY
 Comment=Serial port software
-Exec=yeTTY
+Exec=yetty
 Type=Application
 Terminal=false
 Icon=dev.aa55.yeTTY
