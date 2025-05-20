@@ -5,4 +5,4 @@ Comment=Serial port software
 Exec=yetty
 Type=Application
 Terminal=false
-Icon=dev.aa55.yeTTY
+Icon=dev.aa55.yetty

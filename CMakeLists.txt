@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(yeTTY VERSION 0.1.1 LANGUAGES CXX)
-set(PROJECT_DOMAIN "dev.aa55.yeTTY")
+set(PROJECT_DOMAIN "dev.aa55.yetty")
 
 option(ENABLE_ASAN "Enable address sanitizer" OFF)
 option(ENABLE_MSAN "Enable memory sanitizer" OFF)
@@ -201,8 +201,8 @@ install(TARGETS ${PROJECT_NAME} yetty_suspend
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(FILES resources/dev.aa55.yeTTY.desktop DESTINATION share/applications)
-install(FILES resources/dev.aa55.yeTTY.svgz DESTINATION share/icons/hicolor/scalable/apps/)
+install(FILES resources/dev.aa55.yetty.desktop DESTINATION share/applications)
+install(FILES resources/dev.aa55.yetty.svgz DESTINATION share/icons/hicolor/scalable/apps/)
 install(FILES resources/dev.aa55.yetty.metainfo.xml DESTINATION share/metainfo/)
 
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
