@@ -28,4 +28,9 @@
       <caption>Screenshot of yetty application</caption>
     </screenshot>
   </screenshots>
+  <releases>
+    <release version="1.0.0" date="2025-05-22">
+      <url>https://github.com/aa55-dev/yeTTY/releases/tag/v1.0.0</url>
+    </release>
+  </releases>
 </component>
