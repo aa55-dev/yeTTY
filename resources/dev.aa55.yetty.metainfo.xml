@@ -30,6 +30,7 @@
   <screenshots>
     <screenshot type="default">
       <image>https://yetty.aa55.dev/img/screenshot1.png</image>
+      <caption>Screenshot of yetty application</caption>
     </screenshot>
   </screenshots>
 </component>
