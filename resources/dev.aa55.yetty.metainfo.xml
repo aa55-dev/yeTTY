@@ -28,6 +28,10 @@
       <caption>Screenshot of yetty application</caption>
     </screenshot>
   </screenshots>
+  <categories>
+    <category>Development</category>
+    <category>Building</category>
+  </categories>
   <releases>
     <release version="1.0.0" date="2025-05-22">
       <url>https://github.com/aa55-dev/yeTTY/releases/tag/v1.0.0</url>
