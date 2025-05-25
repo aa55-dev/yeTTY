@@ -156,7 +156,7 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     QDBusConnection connection = QDBusConnection::sessionBus();
 
     // NOLINTNEXTLINE(-Wclazy-qstring-allocations)
-    connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral("-") + QString::number(getpid())));
+    connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral(".pid-") + QString::number(getpid())));
     connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
 
     ui->LTRTextLabel->setVisible(false);
