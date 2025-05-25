@@ -186,5 +186,6 @@ private:
     [[nodiscard]] static int stringMatchCount(QByteArray haystack, const QByteArray& needle);
 
     void processTriggers(const QByteArray& newData);
+    [[nodiscard]] static int getRandomNumber();
 };
 #endif // MAINWINDOW_H

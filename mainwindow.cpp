@@ -23,6 +23,7 @@
 #include <iostream>
 #include <malloc.h>
 #include <pwd.h>
+#include <random>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -156,7 +157,9 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     QDBusConnection connection = QDBusConnection::sessionBus();
 
     // NOLINTNEXTLINE(-Wclazy-qstring-allocations)
-    connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral(".pid-") + QString::number(getpid())));
+    if (!connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral(".id-") + QString::number(getpid() + getRandomNumber())))) {
+        qWarning() << "Failed to register dbus service";
+    }
     connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
 
     ui->LTRTextLabel->setVisible(false);
@@ -308,7 +311,7 @@ void MainWindow::handleError(const QSerialPort::SerialPortError error)
 
     if (!serialPortErrMsgShown) {
         serialPortErrMsg = new KTextEditor::Message(errMsg, KTextEditor::Message::Error); // NOLINT(cppcoreguidelines-owning-memory)
-        connect(serialPortErrMsg, &KTextEditor::Message::closed, this, [this](KTextEditor::Message *) { serialPortErrMsgActive = false; });
+        connect(serialPortErrMsg, &KTextEditor::Message::closed, this, [this](KTextEditor::Message*) { serialPortErrMsgActive = false; });
         doc->postMessage(serialPortErrMsg);
         serialPortErrMsgShown = serialPortErrMsgActive = true;
     }
@@ -1179,4 +1182,13 @@ void MainWindow::processTriggers(const QByteArray& newData)
     } else if (triggerType == TriggerSetupDialog::TriggerType::Inactivity) {
         inactivityTimer->start(INACTIVITY_TIMEOUT);
     }
+}
+
+int MainWindow::getRandomNumber()
+{
+    std::random_device rd;
+    std::mt19937 mt(rd());
+
+    std::uniform_int_distribution<int> distribution(0, std::numeric_limits<int>::max());
+    return distribution(mt);
 }
