@@ -157,7 +157,7 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     QDBusConnection connection = QDBusConnection::sessionBus();
 
     // NOLINTNEXTLINE(-Wclazy-qstring-allocations)
-    if (!connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral(".id-") + QString::number(getpid() + getRandomNumber())))) {
+    if (!connection.registerService(DBUS_SERVICE_NAME + (QStringLiteral(".id-") + QString::number(getRandomNumber())))) {
         qWarning() << "Failed to register dbus service";
     }
     connection.registerObject(QStringLiteral("/"), DBUS_INTERFACE_NAME, this, QDBusConnection::ExportScriptableSlots);
