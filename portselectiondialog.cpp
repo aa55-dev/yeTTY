@@ -50,7 +50,9 @@ void PortSelectionDialog::onRefreshButtonPressed()
 
     int idx = 0;
     int highlightIndex = -1;
+    qInfo() << "Ports: " << availablePorts.size();
     for (const auto& i : std::as_const(availablePorts)) {
+        qInfo() << i.description() << i.productIdentifier() << i.vendorIdentifier() << i.portName() <<i.serialNumber() << i.manufacturer();
         ui->portsComboBox->addItem(i.systemLocation());
         if (i.portName() == previouslyUsedPort) {
             highlightIndex = idx;

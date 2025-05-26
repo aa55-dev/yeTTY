@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QDialog>
+#include <QDir>
 #include <QFileDialog>
 #include <QFontMetrics>
 #include <QIntValidator>
@@ -21,6 +22,7 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     ui->setupUi(this);
 
     const auto dirs = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation);
+
     if (dirs.empty()) {
         qFatal("Failed to get dir location");
     }
@@ -30,7 +32,12 @@ LongTermRunModeDialog::LongTermRunModeDialog(QWidget* parent)
     ui->timeLineEdit->setText(QString::number(timeInMinutes));
     ui->memoryLineEdit->setText(QString::number(memoryInMiB));
 
-    ui->directoryLineEdit->setText(directoryStr);
+    // If we are running as a flatpak application `~/Documents` directory will not be readable.
+    // In such case we cannot set the `~/Documents` directory as default. we expect user to manually select
+    // the required directory by clicking on the tool button.
+    if (const QDir d(directoryStr); d.isReadable()) {
+        ui->directoryLineEdit->setText(directoryStr);
+    }
 
     // resize the lineedit so that the default path can fit in comfortably.
     const QFontMetrics fontMetrics(ui->directoryLineEdit->font());
