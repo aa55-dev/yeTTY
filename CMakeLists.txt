@@ -16,17 +16,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS DBus Widgets SerialPort Multimedia)
 find_package(Boost COMPONENTS stacktrace_backtrace stacktrace_addr2line REQUIRED)
-
-message("Building with Qt" ${QT_VERSION_MAJOR})
-if (NOT Qt6_FOUND)
-  find_package(KF5TextEditor REQUIRED)
-else()
-  find_package(KF6TextEditor REQUIRED)
-endif()
-
+find_package(KF6TextEditor REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libzstd REQUIRED IMPORTED_TARGET libzstd)
 
@@ -179,7 +171,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia
     Qt::DBus
-    KF${QT_VERSION_MAJOR}::TextEditor
+    KF6::TextEditor
     Qt::SerialPort
     PkgConfig::libzstd
     ${Boost_LIBRARIES})
