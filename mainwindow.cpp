@@ -682,7 +682,8 @@ void MainWindow::connectToSerialDevice(const QString& port, const int baud, cons
         % " "
         % (!baud ? QString() : QStringLiteral("| ") + QString::number(baud))
         % (tmpManufacturer.isEmpty() ? QString() : QStringLiteral("| ") + tmpManufacturer)
-        % (tmpDescription.isEmpty() ? QString() : QStringLiteral("| ") + tmpDescription);
+        % (tmpDescription.isEmpty() ? QString() : QStringLiteral("| ") + tmpDescription)
+        % (tmpSerialNumber.isEmpty() ? QString() : QStringLiteral("| ") + tmpSerialNumber);
 
     ui->portInfoLabel->setText(portInfoText);
 
