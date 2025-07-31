@@ -155,7 +155,13 @@
     <addaction name="actionLongTermRunMode"/>
     <addaction name="actionAuto_baud_rate_detection"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>

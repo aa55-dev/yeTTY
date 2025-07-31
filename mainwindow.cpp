@@ -138,6 +138,20 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     ui->actionAuto_baud_rate_detection->setIcon(QIcon::fromTheme(QStringLiteral("search")));
     connect(ui->actionAuto_baud_rate_detection, &QAction::triggered, this, &MainWindow::handleAutoBaudRateDetection);
 
+    // Trying to get the copy and find actions from KateViewInternal and put that into our mainwindow
+    // Is there a better way to do this?
+    for (auto& i : QApplication::allWidgets()) {
+        for (auto& k : i->actions()) {
+            if (k->shortcut() == QKeySequence::Copy) {
+                ui->menuEdit->addAction(k);
+            }
+
+            if (k->shortcut() == QKeySequence::Find) {
+                ui->menuEdit->addAction(k);
+            }
+        }
+    }
+
     connect(ui->startStopButton, &QPushButton::pressed, this, &MainWindow::handleStartStopButton);
 
     connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
