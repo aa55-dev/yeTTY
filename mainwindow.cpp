@@ -144,9 +144,9 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
         for (auto& k : i->actions()) {
             if (k->shortcut() == QKeySequence::Copy) {
                 ui->menuEdit->addAction(k);
-            }
-
-            if (k->shortcut() == QKeySequence::Find) {
+            } else if (k->shortcut() == QKeySequence::Find) {
+                ui->menuEdit->addAction(k);
+            } else if (k->text() == "Copy as &HTML") { // :)
                 ui->menuEdit->addAction(k);
             }
         }
