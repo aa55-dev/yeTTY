@@ -51,13 +51,36 @@ void PortSelectionDialog::onRefreshButtonPressed()
     int idx = 0;
     int highlightIndex = -1;
     qInfo() << "Ports: " << availablePorts.size();
+
+    bool anyPortHasInfo = false;
+
     for (const auto& i : std::as_const(availablePorts)) {
-        qInfo() << i.description() << i.productIdentifier() << i.vendorIdentifier() << i.portName() <<i.serialNumber() << i.manufacturer();
+        qInfo() << i.description() << i.productIdentifier() << i.vendorIdentifier() << i.portName() << i.serialNumber() << i.manufacturer();
+        if (!anyPortHasInfo) {
+            if (!i.description().isEmpty() || !i.manufacturer().isEmpty() || i.productIdentifier() != 0 || i.vendorIdentifier() != 0) {
+                anyPortHasInfo = true;
+            }
+        }
         ui->portsComboBox->addItem(i.systemLocation());
         if (i.portName() == previouslyUsedPort) {
             highlightIndex = idx;
         }
         idx++;
+    }
+
+    // When running as flatpak application, fields like description, manufacturer, PID, VID will be empty.
+    // in such a case we will hide these empty labels.
+    if (!anyPortHasInfo) {
+        ui->descriptionLabel->setVisible(false);
+        ui->manufacturerLabel->setVisible(false);
+        ui->pidvidLabel->setVisible(false);
+
+        ui->fixedTextPIDVIDLabel->setVisible(false);
+        ui->fixedTextManufacturerLabel->setVisible(false);
+        ui->fixedTextDescriptionLabel->setVisible(false);
+
+        // Relayout
+        this->layout()->setSizeConstraint(QLayout::SetFixedSize);
     }
 
     if (highlightIndex >= 0) {
