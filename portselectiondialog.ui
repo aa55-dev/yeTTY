@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>512</width>
-    <height>194</height>
+    <width>506</width>
+    <height>224</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -80,12 +80,25 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="fixedTextSerialLabel">
+         <property name="text">
+          <string>Serial</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QLabel" name="descriptionLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -93,6 +106,12 @@
        </item>
        <item>
         <widget class="QLabel" name="manufacturerLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -100,6 +119,25 @@
        </item>
        <item>
         <widget class="QLabel" name="pidvidLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="serialLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
          </property>

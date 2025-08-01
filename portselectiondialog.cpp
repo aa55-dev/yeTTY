@@ -74,10 +74,12 @@ void PortSelectionDialog::onRefreshButtonPressed()
         ui->descriptionLabel->setVisible(false);
         ui->manufacturerLabel->setVisible(false);
         ui->pidvidLabel->setVisible(false);
+        ui->serialLabel->setVisible(false);
 
         ui->fixedTextPIDVIDLabel->setVisible(false);
         ui->fixedTextManufacturerLabel->setVisible(false);
         ui->fixedTextDescriptionLabel->setVisible(false);
+        ui->fixedTextSerialLabel->setVisible(false);
 
         // Relayout
         this->layout()->setSizeConstraint(QLayout::SetFixedSize);
@@ -103,6 +105,7 @@ void PortSelectionDialog::onCurrentIdxChanged(int idx)
         ui->descriptionLabel->clear();
         ui->manufacturerLabel->clear();
         ui->pidvidLabel->clear();
+        ui->serialLabel->clear();
         return;
     }
 
@@ -111,6 +114,7 @@ void PortSelectionDialog::onCurrentIdxChanged(int idx)
     ui->descriptionLabel->setText(port.description());
     ui->manufacturerLabel->setText(port.manufacturer());
     ui->pidvidLabel->setText(QString::asprintf("%04X:%04X", port.productIdentifier(), port.vendorIdentifier()));
+    ui->serialLabel->setText(port.serialNumber());
 }
 
 int PortSelectionDialog::getSelectedBaud() const
