@@ -143,11 +143,10 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     // Is there a better way to do this?
     for (auto& i : QApplication::allWidgets()) {
         for (auto& k : i->actions()) {
-            if (k->shortcut() == QKeySequence::Copy) {
-                ui->menuEdit->addAction(k);
-            } else if (k->shortcut() == QKeySequence::Find) {
-                ui->menuEdit->addAction(k);
-            } else if (k->text() == "Copy as &HTML") { // :)
+            const auto& shortcut = k->shortcut();
+            if (shortcut == QKeySequence::Copy
+                || shortcut == QKeySequence::Find
+                || k->text() == QLatin1String("Copy as &HTML")) { // :)
                 ui->menuEdit->addAction(k);
             }
         }
@@ -375,7 +374,7 @@ void MainWindow::handleScrollToEnd()
 
 void MainWindow::handleAboutAction()
 {
-    AboutDialog* dlg = new AboutDialog(this);
+    auto* dlg = new AboutDialog(this); // NOLINT(cppcoreguidelines-owning-memory)
     dlg->show();
 }
 
