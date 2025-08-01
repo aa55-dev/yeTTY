@@ -166,7 +166,8 @@ add_executable(${PROJECT_NAME}
     dbus_common.hpp
     common.hpp
     portalreadyinusedialog.h portalreadyinusedialog.cpp portalreadyinusedialog.ui
-    autobauddetection.h autobauddetection.cpp autobauddetection.ui)
+    autobauddetection.h autobauddetection.cpp autobauddetection.ui
+    aboutdialog.hpp aboutdialog.cpp aboutdialog.ui)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia

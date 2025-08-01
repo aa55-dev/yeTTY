@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "aboutdialog.hpp"
 #include "autobauddetection.h"
 #include "common.hpp"
 #include "dbus_common.hpp"
@@ -374,7 +375,8 @@ void MainWindow::handleScrollToEnd()
 
 void MainWindow::handleAboutAction()
 {
-    QMessageBox::about(this, QStringLiteral("About"), QStringLiteral("%1\t\t\n%2\t").arg(PROJECT_NAME, PROJECT_VERSION));
+    AboutDialog* dlg = new AboutDialog(this);
+    dlg->show();
 }
 
 void MainWindow::handleConnectAction()
