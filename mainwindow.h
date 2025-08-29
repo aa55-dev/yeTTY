@@ -179,7 +179,6 @@ private:
     [[nodiscard]] static std::tuple<QString, QString, QString> getPortInfo(QString portLocation);
     // Checks if the user is in "dialout" group
     [[nodiscard]] static bool isUserPermissionSetupCorrectly();
-    [[nodiscard]] bool isRecentlyEnumerated();
     bool handlePortBusy(const QString& port);
     void handlePortAccessError(const QString& port);
 

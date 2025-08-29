@@ -1070,24 +1070,6 @@ bool MainWindow::isUserPermissionSetupCorrectly()
         [&groupResult](const gid_t i) { return i == groupResult->gr_gid; });
 }
 
-bool MainWindow::isRecentlyEnumerated()
-{
-    Q_ASSERT(srcType == SourceType::Serial);
-    const auto& portPath = getSerialPortPath();
-    if (portPath.isEmpty()) {
-        qWarning() << "port path error";
-        return true;
-    }
-
-    struct statx fileStat {};
-    const auto ba = portPath.toLocal8Bit();
-    if (statx(0, ba.data(), 0, STATX_BTIME, &fileStat)) {
-        return true;
-    }
-
-    return time(nullptr) - fileStat.stx_btime.tv_sec < 3;
-}
-
 bool MainWindow::handlePortBusy(const QString& port)
 {
     const auto [pid, command] = findProcessUsingPort(port);
@@ -1147,14 +1129,6 @@ void MainWindow::handlePortAccessError(const QString& port)
         return;
     }
 
-    // This can happen if the user added the account to the dialout group but hasn't restarted the system yet
-    // but it can be falsely triggered if the USB was just plugged in when we tried to open it.
-    if (!isRecentlyEnumerated()) {
-        qWarning() << "Permission denied, possibly not restarted";
-        QMessageBox::critical(this, tr("Permission denied"),
-            tr("Permission denied when attempting to open ") % port % tr(".\nHave you restarted the system after adding the present user to dialout group?"));
-        return;
-    }
     qWarning() << "Permission denied, possibly just enumerated";
 }
 
