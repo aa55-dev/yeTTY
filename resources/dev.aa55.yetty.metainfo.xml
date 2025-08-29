@@ -15,9 +15,29 @@
     <control>touch</control>
   </supports>
   <description>
-    <p>
-      yeTTY is an open source application for embedded developers to view logs from serial port.
-    </p>
+    <p>yeTTY is an open source application for embedded developers to
+    view logs from serial port.</p>
+    <p>Features:</p>
+    <ul>
+      <li>Text highlighting</li>yeTTY uses KDE’s KTextEditor for
+      displaying the logs. KTextEditor provides yeTTY with syntax
+      highlighting and text search.
+      <li>Auto reconnection</li>In case your board gets disconnected,
+      yeTTY will keep on attempting to reconnect to the same port.
+      <li>Audio alert on string match</li>yeTTY can monitor the
+      output for a specified keyword and alert you with a sound upon
+      match.
+      <li>Long term run mode</li>This is useful if you need to keep
+      the board running overnight. yeTTY will capture the logs from
+      serial port and compress it and save them to storage.
+      <li>Suspend during flashing</li>If your board uses the same
+      serial port for both logs and flashing, prepend the flashing
+      command with yetty_suspend to suspend yeTTY while the board is
+      being flashed.
+      <li>Auto baud rate detection</li>yeTTY can attempt to
+      automatically detect the baud rate by trying out different baud
+      rates till it finds one with readable ASCII text.
+    </ul>
   </description>
   <content_rating type="oars-1.0"/>
   <launchable type="desktop-id">dev.aa55.yetty.desktop</launchable>
