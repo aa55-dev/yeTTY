@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(yeTTY VERSION 0.1.2 LANGUAGES CXX)
+project(yeTTY VERSION 0.1.3 LANGUAGES CXX)
 set(PROJECT_DOMAIN "dev.aa55.yetty")
 
 option(ENABLE_ASAN "Enable address sanitizer" OFF)
