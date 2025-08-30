@@ -2,6 +2,7 @@
 #include "./ui_mainwindow.h"
 #include "aboutdialog.hpp"
 #include "autobauddetection.h"
+#include "backgroundcolorchange.h"
 #include "common.hpp"
 #include "dbus_common.hpp"
 #include "longtermrunmodedialog.h"
@@ -139,6 +140,9 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     ui->actionAuto_baud_rate_detection->setIcon(QIcon::fromTheme(QStringLiteral("search")));
     connect(ui->actionAuto_baud_rate_detection, &QAction::triggered, this, &MainWindow::handleAutoBaudRateDetection);
 
+    ui->actionBackground_color_change->setIcon(QIcon::fromTheme(QStringLiteral("color-profile")));
+    connect(ui->actionBackground_color_change, &QAction::triggered, this, &MainWindow::handleBgColorChangeAction);
+
     // Trying to get the copy and find actions from KateViewInternal and put that into our mainwindow
     // Is there a better way to do this?
     for (auto& i : QApplication::allWidgets()) {
@@ -245,9 +249,28 @@ void MainWindow::handleNewData(QByteArray newData)
 
     processTriggers(newData);
 
+    if (!bgColorChangeStr.isEmpty()) {
+        if (newData.contains(bgColorChangeStr.toUtf8())) {
+            currentMark++;
+            if (currentMark > KTextEditor::Document::markType31) {
+                currentMark = KTextEditor::Document::markType01;
+            }
+        }
+    }
+
+    const auto linesStart = doc->lines();
+
     doc->setReadWrite(true);
     doc->insertText(doc->documentEnd(), newData);
     doc->setReadWrite(false);
+
+    const auto linesEnd = doc->lines();
+
+    if (currentMark) {
+        for (int i = linesStart - 1; i <= linesEnd - 1; i++) {
+            doc->setMark(i, currentMark);
+        }
+    }
 }
 
 void MainWindow::setProgramState(const ProgramState newState)
@@ -608,6 +631,13 @@ void MainWindow::handleAutoBaudRateDetection()
 {
     auto abd = std::make_unique<AutoBaudDetection>(this);
     abd->exec();
+}
+
+void MainWindow::handleBgColorChangeAction()
+{
+    auto dlg = std::make_unique<BackgroundColorChange>(bgColorChangeStr, this);
+    dlg->exec();
+    bgColorChangeStr = dlg->getString();
 }
 
 void MainWindow::start()

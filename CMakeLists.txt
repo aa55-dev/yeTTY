@@ -167,7 +167,8 @@ add_executable(${PROJECT_NAME}
     common.hpp
     portalreadyinusedialog.h portalreadyinusedialog.cpp portalreadyinusedialog.ui
     autobauddetection.h autobauddetection.cpp autobauddetection.ui
-    aboutdialog.hpp aboutdialog.cpp aboutdialog.ui)
+    aboutdialog.hpp aboutdialog.cpp aboutdialog.ui
+    backgroundcolorchange.h backgroundcolorchange.cpp backgroundcolorchange.ui)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Widgets
     Qt::Multimedia

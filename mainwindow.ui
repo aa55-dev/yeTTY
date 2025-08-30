@@ -154,6 +154,7 @@
     <addaction name="actionTrigger"/>
     <addaction name="actionLongTermRunMode"/>
     <addaction name="actionAuto_baud_rate_detection"/>
+    <addaction name="actionBackground_color_change"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -205,6 +206,11 @@
   <action name="actionAuto_baud_rate_detection">
    <property name="text">
     <string>&amp;Auto baud rate detection</string>
+   </property>
+  </action>
+  <action name="actionBackground_color_change">
+   <property name="text">
+    <string>&amp;Background color change</string>
    </property>
   </action>
  </widget>

@@ -91,6 +91,7 @@ private slots:
     void handleStatusBarTimer();
     void handleCancelAutoRetry();
     void handleAutoBaudRateDetection();
+    void handleBgColorChangeAction();
 
     void handleSocketNotifierActivated(QSocketDescriptor socket, QSocketNotifier::Type);
 
@@ -156,6 +157,9 @@ private:
 
     int fileCounter {};
     int errCtr {};
+    // Text background color control
+    uint currentMark {};
+    QString bgColorChangeStr;
 
     static constexpr auto HIGHLIGHT_MODE = "Log File (advanced)";
     static constexpr auto GROUP_DIALOUT = "dialout";
