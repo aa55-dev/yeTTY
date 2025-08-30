@@ -37,6 +37,24 @@ Source code is available on [https://github.com/aa55-dev/yeTTY/](https://github.
 
     yeTTY can attempt to automatically detect the baud rate by trying out different baud rates till it finds one with readable ASCII text.
 
+7. Auto background color change on microcontroller reset
+
+   In order for this feature to work, you need to make your microcontroller print out a specific string on bootup.
+   Example:
+   ```
+   puts("=======================");
+   ```
+   Now open "Tools" -> "Background color change" and set `=======================` as the string. Now on every reset, yeTTY will change the background color.
+   
+## Installing
+
+You can install this application from flatpak, but building from source is recommended since some features don't work due to flatpak sandboxing.
+
+<a href='https://flathub.org/apps/dev.aa55.yetty'>
+    <img width='240' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en'/>
+</a>
+   
+   
 ## Building
 
 **1. Install dependencies**
