@@ -859,7 +859,7 @@ void MainWindow::setInhibit(const bool enabled)
         "Inhibit", // Method to call
         &error, &reply,
         "ssss", // Types of function arguments. Four strings here
-        "idle:sleep:shutdown", // What
+        "sleep:shutdown", // What
         PROJECT_NAME, // Who
         tr("Serial communication in progress").toUtf8().constData(), // Why
         "block"); // Mode
