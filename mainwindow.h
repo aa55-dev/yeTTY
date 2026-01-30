@@ -79,6 +79,7 @@ private slots:
     static void handleQuitAction();
     void handleScrollToEnd();
     void handleAboutAction();
+    void handleSettingsAction();
     void handleConnectAction();
     void handleTriggerSetupAction();
     void handleTriggerSetupDialogDone(int result);
@@ -131,6 +132,8 @@ private:
     int triggerMatchCount {};
     QTimer* inactivityTimer {};
     static constexpr auto INACTIVITY_TIMEOUT = 10'000;
+
+    quint32 txtBufferSize {};
 
     ProgramState currentProgramState = ProgramState::Unknown;
     QTimer* autoRetryTimer {};
@@ -190,5 +193,6 @@ private:
 
     void processTriggers(const QByteArray& newData);
     [[nodiscard]] static int getRandomNumber();
+    void loadSettings();
 };
 #endif // MAINWINDOW_H

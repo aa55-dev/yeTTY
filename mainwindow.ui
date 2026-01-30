@@ -160,6 +160,7 @@
     <property name="title">
      <string>&amp;Edit</string>
     </property>
+    <addaction name="actionSettings"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -211,6 +212,11 @@
   <action name="actionBackground_color_change">
    <property name="text">
     <string>&amp;Background color change</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>&amp;Settings</string>
    </property>
   </action>
  </widget>

@@ -8,6 +8,7 @@
 #include "longtermrunmodedialog.h"
 #include "portalreadyinusedialog.h"
 #include "portselectiondialog.h"
+#include "settingsdialog.hpp"
 #include "triggersetupdialog.h"
 #include "yetty.version.h"
 
@@ -72,6 +73,7 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
     , statusBarText(new QLabel(this))
     , longTermRunModeTimer(new QTimer(this))
 {
+    loadSettings();
     QString portLocation;
     int baud {};
 
@@ -108,6 +110,10 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
         Q_ASSERT(srcType == SourceType::Serial);
         connectToSerialDevice(portLocation, baud);
     }
+
+    connect(ui->actionSettings, &QAction::triggered, this, &MainWindow::handleSettingsAction);
+    ui->actionSettings->setShortcut(QKeySequence::Preferences);
+    ui->actionSettings->setIcon(QIcon::fromTheme(QStringLiteral("settings-configure")));
 
     connect(ui->actionConnectToDevice, &QAction::triggered, this, &MainWindow::handleConnectAction);
     ui->actionConnectToDevice->setShortcut(QKeySequence::Open);
@@ -151,7 +157,7 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
             if (shortcut == QKeySequence::Copy
                 || shortcut == QKeySequence::Find
                 || k->text() == QLatin1String("Copy as &HTML")) { // :)
-                ui->menuEdit->addAction(k);
+                ui->menuEdit->insertAction(ui->actionSettings, k);
             }
         }
     }
@@ -199,12 +205,30 @@ MainWindow::MainWindow(const std::optional<std::tuple<SourceType, QString, int>>
 MainWindow::~MainWindow()
 {
     const auto portName = serialPort->portName();
+    QSettings settings;
     if (!portName.isEmpty()) {
-        QSettings settings;
         const auto baud = QString::number(serialPort->baudRate());
         Q_ASSERT(!baud.isEmpty());
         settings.setValue(SETTINGS_LAST_USED_PORT, QStringList { serialPort->portName(), baud });
+        sync();
     }
+
+    bool bufferSizeUpdateRequired = false;
+    if (settings.contains(SETTINGS_BUFFER_SIZE)) {
+        bool ok {};
+        const auto cfgVal = settings.value(SETTINGS_BUFFER_SIZE).toUInt(&ok);
+        if (!ok) {
+            qWarning() << "Failed to read key: " << SETTINGS_BUFFER_SIZE << " " << settings.value(SETTINGS_BUFFER_SIZE);
+        }
+
+        bufferSizeUpdateRequired = (!ok || cfgVal != txtBufferSize);
+    }
+
+    if (bufferSizeUpdateRequired) {
+        settings.setValue(SETTINGS_BUFFER_SIZE, QVariant { txtBufferSize });
+        sync();
+    }
+
     delete ui;
     ZSTD_freeCCtx(zstdCtx);
     zstdCtx = nullptr;
@@ -269,6 +293,27 @@ void MainWindow::handleNewData(QByteArray newData)
     if (currentMark) {
         for (int i = linesStart - 1; i <= linesEnd - 1; i++) {
             doc->setMark(i, currentMark);
+        }
+    }
+
+    if (txtBufferSize) {
+        int loopLimit = 0xFFFF;
+        // We don't bother finding the exact number of bytes, we just keep removing lines till document character count
+        // falls below the threshold
+        while (static_cast<size_t>(doc->totalCharacters()) / 1024 > txtBufferSize) {
+
+            // Make sure we don't end up in an infinite loop
+            loopLimit--;
+            if (loopLimit <= 0) {
+                qWarning() << "loop upper limit hit: " << doc->totalCharacters() << " " << doc->lines() << " " << txtBufferSize;
+                break;
+            }
+
+            doc->setReadWrite(true);
+            if (!doc->removeLine(0)) {
+                qWarning() << "Failed to remove line: " << doc->totalCharacters() << " " << doc->lines() << " " << txtBufferSize;
+            }
+            doc->setReadWrite(false);
         }
     }
 }
@@ -399,6 +444,17 @@ void MainWindow::handleAboutAction()
 {
     auto* dlg = new AboutDialog(this); // NOLINT(cppcoreguidelines-owning-memory)
     dlg->show();
+}
+
+void MainWindow::handleSettingsAction()
+{
+    SettingsDialog dlg(txtBufferSize, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        const auto newBufferSize = dlg.getBufferSize();
+        if (newBufferSize != txtBufferSize) {
+            txtBufferSize = newBufferSize;
+        }
+    }
 }
 
 void MainWindow::handleConnectAction()
@@ -1211,4 +1267,18 @@ int MainWindow::getRandomNumber()
 
     std::uniform_int_distribution<int> distribution(0, std::numeric_limits<int>::max());
     return distribution(mt);
+}
+
+void MainWindow::loadSettings()
+{
+    const QSettings settings;
+    if (settings.contains(SETTINGS_BUFFER_SIZE)) {
+        bool ok {};
+        const auto cfgVal = settings.value(SETTINGS_BUFFER_SIZE).toUInt(&ok);
+        if (ok) {
+            txtBufferSize = cfgVal;
+        } else {
+            qWarning() << "Failed to read settings: " << SETTINGS_BUFFER_SIZE << " " << settings.value(SETTINGS_BUFFER_SIZE);
+        }
+    }
 }
