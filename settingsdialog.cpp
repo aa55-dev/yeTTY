@@ -31,9 +31,7 @@ quint32 SettingsDialog::getBufferSize() const
         if (!ok) {
             return 0;
         }
-
         return result;
-    } else {
-        return 0;
     }
+    return 0;
 }
