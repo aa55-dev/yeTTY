@@ -222,6 +222,8 @@ MainWindow::~MainWindow()
         }
 
         bufferSizeUpdateRequired = (!ok || cfgVal != txtBufferSize);
+    } else {
+        bufferSizeUpdateRequired = txtBufferSize;
     }
 
     if (bufferSizeUpdateRequired) {
