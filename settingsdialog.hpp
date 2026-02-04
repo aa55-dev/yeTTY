@@ -27,6 +27,11 @@ private:
     Ui::SettingsDialog* ui;
     QIntValidator validator;
     size_t bufferSize;
+    void updateOkButtonState();
+
+private slots:
+    void onFixedRadioButtonToggled(const bool checked);
+    void onEditingFinished();
 };
 
 #endif // SETTINGSDIALOG_HPP
