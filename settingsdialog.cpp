@@ -25,7 +25,7 @@ SettingsDialog::~SettingsDialog()
 
 quint32 SettingsDialog::getBufferSize() const
 {
-    if (ui->fixedRadioButton->isEnabled()) {
+    if (ui->fixedRadioButton->isChecked()) {
         bool ok {};
         const auto result = static_cast<quint32>(ui->lineEdit->text().toULong(&ok));
         if (!ok) {
@@ -33,5 +33,6 @@ quint32 SettingsDialog::getBufferSize() const
         }
         return result;
     }
+
     return 0;
 }
