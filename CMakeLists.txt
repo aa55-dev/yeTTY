@@ -192,14 +192,33 @@ endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "yetty")
 
+include(GNUInstallDirs)
+
 install(TARGETS ${PROJECT_NAME} yetty_suspend
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
-install(FILES resources/dev.aa55.yetty.desktop DESTINATION share/applications)
-install(FILES resources/dev.aa55.yetty.svgz DESTINATION share/icons/hicolor/scalable/apps/)
-install(FILES resources/dev.aa55.yetty.metainfo.xml DESTINATION share/metainfo/)
+install(FILES resources/dev.aa55.yetty.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(FILES resources/dev.aa55.yetty.svgz DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps/)
+install(FILES resources/dev.aa55.yetty.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo/)
 
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_PACKAGE_CONTACT "mail@aa55.dev")
-include (CPack)
+find_program(PANDOC_EXECUTABLE pandoc)
+
+function(generate_man_page TARGET_NAME INPUT_MD)
+    set(OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.1)
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}
+        COMMAND ${PANDOC_EXECUTABLE} -s -t man ${INPUT_MD} -o ${OUTPUT_FILE}
+        DEPENDS ${INPUT_MD}
+    )
+
+    add_custom_target(${TARGET_NAME}_man ALL DEPENDS ${OUTPUT_FILE})
+    install(FILES ${OUTPUT_FILE} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+endfunction()
+
+if(PANDOC_EXECUTABLE)
+    generate_man_page(yetty ${CMAKE_CURRENT_SOURCE_DIR}/doc/yetty.1.md)
+    generate_man_page(yetty_suspend ${CMAKE_CURRENT_SOURCE_DIR}/doc/yetty_suspend.1.md)
+endif()

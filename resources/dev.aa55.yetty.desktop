@@ -1,4 +1,3 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=yeTTY
 Comment=Serial port software
@@ -6,3 +5,4 @@ Exec=yetty
 Type=Application
 Terminal=false
 Icon=dev.aa55.yetty
+Keywords=serial;uart;USB CDC;embedded;
