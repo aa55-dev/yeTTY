@@ -1,0 +1,30 @@
+Source: yetty
+Section: embedded
+Priority: optional
+Maintainer: Arjun AK <mail@aa55.dev>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake (>= 3.5~),
+ pandoc (>= 3.1.11.1+ds),
+ qt6-base-dev (>= 6.8.2+dfsg~),
+ qt6-serialport-dev (>= 6.8.2~),
+ qt6-multimedia-dev (>= 6.8.2~),
+ libkf6texteditor-dev (>= 6.13.0~),
+ libzstd-dev (>= 1.5.7+dfsg~),
+ libsystemd-dev (>= 257.9-1~),
+ libboost-stacktrace-dev (>= 1.83.0.2~),
+ libbacktrace-dev (>= 0.1~)
+Standards-Version: 4.7.2
+Homepage: https://yetty.aa55.dev/
+Vcs-Browser: https://salsa.debian.org/debian/yetty
+Vcs-Git: https://salsa.debian.org/debian/yetty.git
+
+Package: yetty
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: Serial port viewer
+ yeTTY is an open source application for embedded developers to view logs from
+ serial port.
