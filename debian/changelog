@@ -1,4 +1,4 @@
-yetty (0.1.4-1) UNRELEASED; urgency=medium
+yetty (0.1.4-1) unstable; urgency=low
 
   * Initial release. (Closes: #1132415)
 
